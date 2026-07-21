@@ -120,8 +120,14 @@ export const PAPERS_SOURCES = [
   }
 ];
 
-// 行业媒体（10 源）
+// 行业媒体（11 源）
 export const MEDIA_SOURCES = [
+  {
+    name: 'Hex2077',
+    url: 'https://hex2077.dev/',
+    type: 'html',
+    category: CATEGORIES.MEDIA
+  },
   {
     name: 'TechCrunch AI',
     url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
@@ -206,6 +212,16 @@ export const COMMUNITY_SOURCES = [
   }
 ];
 
+// 独立博客 / 个人站点
+export const INDIE_SOURCES = [
+  {
+    name: 'Hex2077',
+    url: 'https://hex2077.dev/',
+    type: 'custom-hex2077',
+    category: CATEGORIES.MEDIA
+  }
+];
+
 // 国内生态（5 源）+ 国内热搜
 export const CHINA_SOURCES = [
   {
@@ -263,6 +279,7 @@ export const ALL_SOURCES = [
   ...LABS_SOURCES,
   ...PAPERS_SOURCES,
   ...MEDIA_SOURCES,
+  ...INDIE_SOURCES,
   ...COMMUNITY_SOURCES,
   ...CHINA_SOURCES,
   ...CHINA_TRENDING_SOURCES

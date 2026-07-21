@@ -6,7 +6,7 @@
 import * as cheerio from 'cheerio';
 import RssParser from 'rss-parser';
 import { safeFetchText, safeFetchJSON, isWithin24Hours } from '../utils.js';
-import { LABS_SOURCES, PAPERS_SOURCES, MEDIA_SOURCES, CHINA_SOURCES, CATEGORIES } from '../config.js';
+import { LABS_SOURCES, PAPERS_SOURCES, MEDIA_SOURCES, CHINA_SOURCES, INDIE_SOURCES, CATEGORIES } from '../config.js';
 
 const rssParser = new RssParser({
   timeout: 10000,
@@ -140,6 +140,69 @@ async function crawlArxiv(source) {
 }
 
 /**
+ * Hex2077 专用抓取（Next.js SSR 页面，提取日报和周报链接）
+ */
+async function crawlHex2077() {
+  const html = await safeFetchText('https://hex2077.dev/');
+  if (!html) return [];
+
+  const $ = cheerio.load(html);
+  const items = [];
+
+  // 日报链接: /docs/2026-07/2026-07-21/
+  $('a[href*="/docs/"]').each((_, el) => {
+    const $a = $(el);
+    let href = $a.attr('href') || '';
+    // 提取标题（h3 或 .font-bold 文本）
+    const title = $a.find('h3').text().trim()
+      || $a.find('.font-bold').first().text().trim()
+      || $a.text().trim();
+
+    if (!title || title.length < 5) return;
+    if (href.startsWith('/')) href = `https://hex2077.dev${href}`;
+    if (items.some(i => i.url === href)) return;
+
+    // 提取描述
+    const desc = $a.find('p').text().trim() || '';
+
+    items.push({
+      title,
+      url: href,
+      source: 'Hex2077',
+      category: CATEGORIES.MEDIA,
+      publishedAt: new Date().toISOString(),
+      content: desc
+    });
+  });
+
+  // 周报/博客链接: /blog/weekly/...
+  $('a[href*="/blog/"]').each((_, el) => {
+    const $a = $(el);
+    let href = $a.attr('href') || '';
+    const title = $a.find('h3').text().trim()
+      || $a.find('.font-bold').first().text().trim()
+      || $a.text().trim();
+
+    if (!title || title.length < 5) return;
+    if (href.startsWith('/')) href = `https://hex2077.dev${href}`;
+    if (items.some(i => i.url === href)) return;
+
+    const desc = $a.find('p').text().trim() || '';
+
+    items.push({
+      title,
+      url: href,
+      source: 'Hex2077',
+      category: CATEGORIES.MEDIA,
+      publishedAt: new Date().toISOString(),
+      content: desc
+    });
+  });
+
+  return items.slice(0, 10);
+}
+
+/**
  * 抓取单个数据源
  */
 async function crawlSource(source) {
@@ -148,6 +211,8 @@ async function crawlSource(source) {
   try {
     if (source.type === 'rss') {
       return await crawlRSS(source);
+    } else if (source.type === 'custom-hex2077') {
+      return await crawlHex2077();
     } else {
       return await crawlHTML(source);
     }
@@ -164,7 +229,7 @@ async function crawlSource(source) {
 export async function crawlSites() {
   console.log('[Crawler] 开始抓取 25 精选站点...');
 
-  const allSources = [...LABS_SOURCES, ...PAPERS_SOURCES, ...MEDIA_SOURCES, ...CHINA_SOURCES];
+  const allSources = [...LABS_SOURCES, ...PAPERS_SOURCES, ...MEDIA_SOURCES, ...INDIE_SOURCES, ...CHINA_SOURCES];
   const results = [];
 
   for (const source of allSources) {
