@@ -13,6 +13,21 @@ const rssParser = new RssParser({
   headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
 });
 
+// ===== 工具函数 =====
+
+/**
+ * 从 URL 提取主页地址
+ * 例：https://www.mckinsey.com/industries/automotive/insights → https://www.mckinsey.com/
+ */
+function getHomepageUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.origin}/`;
+  } catch {
+    return null;
+  }
+}
+
 // ===== 通用抓取器 =====
 
 async function crawlRSS(source) {
@@ -30,6 +45,14 @@ async function crawlRSS(source) {
       }));
   } catch (error) {
     console.warn(`[Sites] RSS 抓取失败 ${source.name}: ${error.message}`);
+    // RSS 失败时回退到用 HTML 方式抓主页
+    const homepage = getHomepageUrl(source.url);
+    if (homepage) {
+      console.log(`[Sites] ${source.name}: RSS 失败，回退 HTML 抓取 ${homepage}`);
+      try {
+        return await crawlHTML({ ...source, url: homepage });
+      } catch { /* ignore */ }
+    }
     return [];
   }
 }
@@ -266,22 +289,54 @@ async function crawlSource(source) {
   console.log(`[Sites] 抓取 ${source.name}...`);
 
   try {
+    let items = [];
+
     switch (source.type) {
       case 'rss':
-        return await crawlRSS(source);
+        items = await crawlRSS(source);
+        break;
       case 'custom-hex2077-docs':
-        return await crawlHex2077Docs();
+        items = await crawlHex2077Docs();
+        break;
       case 'custom-hex2077-weekly':
-        return await crawlHex2077Weekly();
+        items = await crawlHex2077Weekly();
+        break;
       case 'custom-hex2077-blog':
-        return await crawlHex2077Blog();
+        items = await crawlHex2077Blog();
+        break;
       case 'custom-hex2077-nav':
-        return await crawlHex2077Nav();
+        items = await crawlHex2077Nav();
+        break;
       default:
-        return await crawlHTML(source);
+        items = await crawlHTML(source);
+        break;
     }
+
+    // 如果原始 URL 抓取结果为空，尝试回退到主页
+    if (items.length === 0 && source.type === 'html') {
+      const homepage = getHomepageUrl(source.url);
+      if (homepage && homepage !== source.url) {
+        console.log(`[Sites] ${source.name}: 原链接无结果，回退到主页 ${homepage}`);
+        items = await crawlHTML({ ...source, url: homepage });
+      }
+    }
+
+    return items;
   } catch (error) {
+    // 抓取失败时也尝试回退到主页
     console.warn(`[Sites] ${source.name} 抓取失败: ${error.message}`);
+
+    if (source.type === 'html') {
+      const homepage = getHomepageUrl(source.url);
+      if (homepage && homepage !== source.url) {
+        console.log(`[Sites] ${source.name}: 尝试回退主页 ${homepage}`);
+        try {
+          return await crawlHTML({ ...source, url: homepage });
+        } catch {
+          return [];
+        }
+      }
+    }
     return [];
   }
 }
