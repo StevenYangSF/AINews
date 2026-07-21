@@ -115,6 +115,10 @@ export class Summarizer {
     if (fullText.match(/infra|基础设施|gpu|芯片|训练|推理|部署/)) tags.push('AI Infra');
     if (fullText.match(/融资|商业|企业|收购|市场|产品/)) tags.push('行业商业');
     if (fullText.match(/论文|paper|研究|arxiv|实验/)) tags.push('论文解读');
+    if (fullText.match(/具身|embodied|humanoid|人形|机器人|robot|vla|灵巧手|aloha|unitree|宇树|傅利叶/)) tags.push('具身智能');
+    if (fullText.match(/自动驾驶|autonomous.?driv|fsd|waymo|智驾|端到端|sdv|智能汽车|tesla.*ai/)) tags.push('自动驾驶');
+    if (fullText.match(/agent|智能体|crewai|autogen|multi.?agent/)) tags.push('智能体');
+    if (fullText.match(/安全|safety|alignment|jailbreak|红队/)) tags.push('AI 安全');
 
     if (tags.length === 0) tags.push('行业商业'); // 默认标签
 

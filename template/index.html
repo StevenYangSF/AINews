@@ -74,6 +74,8 @@
     <!-- Tab 导航 -->
     <nav class="flex flex-wrap gap-2 mb-8 sticky top-[73px] z-40 bg-[#f5f5f7]/80 dark:bg-[#1d1d1f]/80 glass py-3 -mx-5 px-5">
       <button class="tab-btn tab-active px-4 py-2 rounded-full text-xs font-semibold transition-all" data-tab="github">🚀 GitHub</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="embodied">🤖 具身智能</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="autoAi">🚗 汽车AI</button>
       <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="labs">🧪 实验室</button>
       <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="media">📰 行业资讯</button>
       <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="weekly">📋 深度周报</button>
@@ -84,6 +86,8 @@
 
     <!-- Tab 内容区 -->
     <div id="tab-github" class="tab-content"><div id="github-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
+    <div id="tab-embodied" class="tab-content hidden"><div id="embodied-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
+    <div id="tab-autoAi" class="tab-content hidden"><div id="autoAi-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
     <div id="tab-labs" class="tab-content hidden"><div id="labs-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
     <div id="tab-media" class="tab-content hidden"><div id="media-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
     <div id="tab-weekly" class="tab-content hidden"><div id="weekly-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2"></div></div>
@@ -138,7 +142,11 @@
       '论文解读': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
       'AI 安全': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
       '智能体': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
-      '产品应用': 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'
+      '产品应用': 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
+      '具身智能': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+      '人形机器人': 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300',
+      '自动驾驶': 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
+      '端到端智驾': 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
     };
 
     function renderCard(item) {
@@ -212,6 +220,8 @@
 
       const sections = {
         'github-list': { data: DATA.github, render: renderCard },
+        'embodied-list': { data: DATA.embodied, render: renderCard },
+        'autoAi-list': { data: DATA.autoAi, render: renderCard },
         'labs-list': { data: DATA.labs, render: renderCard },
         'media-list': { data: DATA.media, render: renderCard },
         'weekly-list': { data: DATA.weekly, render: renderWeeklyCard },

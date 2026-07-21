@@ -9,24 +9,30 @@ export const AI_KEYWORDS = [
   'neural network', 'llm', 'large language model', 'gpt', 'claude',
   'transformer', 'diffusion', 'agent', 'rag', 'fine-tuning', 'embedding',
   'multimodal', 'computer vision', 'nlp', 'reinforcement learning',
-  '人工智能', '大模型', '机器学习', '深度学习', '神经网络', '智能体'
+  'robotics', 'embodied', 'humanoid', 'autonomous driving', 'self-driving',
+  'vla', 'manipulation', 'fsd', 'waymo',
+  '人工智能', '大模型', '机器学习', '深度学习', '神经网络', '智能体',
+  '具身智能', '人形机器人', '自动驾驶', '智能驾驶', '端到端'
 ];
 
-// 自动标签分类（扩展到 8 个）
+// 自动标签分类（扩展到 12 个）
 export const TAG_CATEGORIES = [
   '模型发布', '开源工具', 'AI Infra', '行业商业', '论文解读',
-  'AI 安全', '智能体', '产品应用'
+  'AI 安全', '智能体', '产品应用',
+  '具身智能', '人形机器人', '自动驾驶', '端到端智驾'
 ];
 
-// 数据源分类（扩展到 7 个 Tab）
+// 数据源分类（9 个 Tab）
 export const CATEGORIES = {
   GITHUB: 'github',
   LABS: 'labs',
   PAPERS: 'papers',
   MEDIA: 'media',
+  EMBODIED: 'embodied',    // 新增：具身智能
+  AUTO_AI: 'auto_ai',      // 新增：汽车AI
+  WEEKLY: 'weekly',
   COMMUNITY: 'community',
-  CHINA: 'china',
-  WEEKLY: 'weekly'
+  CHINA: 'china'
 };
 
 // GitHub Trending 配置
@@ -70,7 +76,7 @@ export const MEDIA_SOURCES = [
   { name: 'The Information', url: 'https://www.theinformation.com/', type: 'html', category: CATEGORIES.MEDIA }
 ];
 
-// Hex2077 专属源（4 个页面，独立抓取）
+// Hex2077 专属源
 export const HEX2077_SOURCES = [
   { name: 'Hex2077 日报', url: 'https://hex2077.dev/docs/', type: 'custom-hex2077-docs', category: CATEGORIES.MEDIA },
   { name: 'Hex2077 周报', url: 'https://hex2077.dev/blog/?category=weekly', type: 'custom-hex2077-weekly', category: CATEGORIES.WEEKLY },
@@ -78,10 +84,61 @@ export const HEX2077_SOURCES = [
   { name: 'Hex2077 导航', url: 'https://nav.hex2077.dev/', type: 'custom-hex2077-nav', category: CATEGORIES.COMMUNITY }
 ];
 
+// ===== 新增板块：具身智能（Embodied AI & 人形机器人）=====
+export const EMBODIED_SOURCES = [
+  // 学术实验室与论文
+  { name: 'arXiv cs.RO', url: 'https://rss.arxiv.org/rss/cs.RO', type: 'rss', category: CATEGORIES.EMBODIED },
+  { name: 'NVIDIA Isaac', url: 'https://developer.nvidia.com/isaac', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: 'Papers with Code Robotics', url: 'https://paperswithcode.com/area/robots', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: 'Berkeley BAIR Robotics', url: 'https://bair.berkeley.edu/blog/', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: 'Hugging Face Robotics', url: 'https://huggingface.co/models?pipeline_tag=robotics', type: 'html', category: CATEGORIES.EMBODIED },
+  // 海外前沿厂商
+  { name: 'Figure AI', url: 'https://www.figure.ai/', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: 'Covariant', url: 'https://covariant.ai/', type: 'html', category: CATEGORIES.EMBODIED },
+  // 国内具身智能领军
+  { name: '宇树科技 Unitree', url: 'https://www.unitree.com/', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: '智元机器人 AgiBot', url: 'https://www.agibot.com/', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: '傅利叶智能', url: 'https://www.fourier-ai.com/', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: '银河通用 Galbot', url: 'https://www.galbot.com/', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: '星尘智能', url: 'https://www.stardust-ai.com/', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: '穹彻智能', url: 'https://www.noomvision.com/', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: '自变量机器人', url: 'https://www.xsquare.ai/', type: 'html', category: CATEGORIES.EMBODIED },
+  // 社区与媒体
+  { name: '机器人大讲堂', url: 'http://www.rsrobot.net/', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: '上海AI Lab具身智能', url: 'https://www.shlab.org.cn/', type: 'html', category: CATEGORIES.EMBODIED },
+  { name: '古月居', url: 'https://www.guyuehome.com/', type: 'html', category: CATEGORIES.EMBODIED }
+];
+
+// ===== 新增板块：汽车 AI 与自动驾驶 =====
+export const AUTO_AI_SOURCES = [
+  // 全球咨询研报
+  { name: 'McKinsey Automotive', url: 'https://www.mckinsey.com/industries/automotive-and-assembly/our-insights', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: 'Roland Berger Auto', url: 'https://www.rolandberger.com/en/Insights/Global-Topics/Automotive/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: 'BCG Automotive', url: 'https://www.bcg.com/industries/automotive-industry/insights', type: 'html', category: CATEGORIES.AUTO_AI },
+  // 智驾一手进展
+  { name: 'Waymo Blog', url: 'https://waymo.com/blog/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: 'Tesla AI', url: 'https://www.tesla.com/AI', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '百度 Apollo', url: 'https://apollo.auto/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: 'Momenta', url: 'https://www.momenta.ai/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '华为智能汽车', url: 'https://auto.huawei.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '小鹏汽车智驾', url: 'https://www.xpeng.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  // 垂直汽车科技媒体
+  { name: '盖世汽车', url: 'https://auto.gasgoo.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '九章智驾', url: 'https://www.ninethtech.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '车东西', url: 'https://chedongxi.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '高工智能汽车', url: 'https://www.gg-auto.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '新出行', url: 'https://www.xchuxing.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '自动驾驶之心', url: 'https://www.autodrivingsolutions.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: 'Electrek', url: 'https://electrek.co/feed/', type: 'rss', category: CATEGORIES.AUTO_AI },
+  { name: 'TechCrunch Mobility', url: 'https://techcrunch.com/category/transportation/feed/', type: 'rss', category: CATEGORIES.AUTO_AI }
+];
+
 // 全球社区
 export const COMMUNITY_SOURCES = [
-  { name: 'Hacker News', url: 'https://hn.algolia.com/api/v1/search?tags=story&query=AI+LLM+GPT', type: 'api', category: CATEGORIES.COMMUNITY },
+  { name: 'Hacker News', url: 'https://hn.algolia.com/api/v1/search?tags=story&query=AI+LLM+GPT+Agent+Robotics+VLA', type: 'api', category: CATEGORIES.COMMUNITY },
   { name: 'Reddit r/MachineLearning', url: 'https://www.reddit.com/r/MachineLearning/hot.json?limit=20', type: 'api', category: CATEGORIES.COMMUNITY },
+  { name: 'Reddit r/SelfDrivingCars', url: 'https://www.reddit.com/r/SelfDrivingCars/hot.json?limit=10', type: 'api', category: CATEGORIES.AUTO_AI },
+  { name: 'Reddit r/robotics', url: 'https://www.reddit.com/r/robotics/hot.json?limit=10', type: 'api', category: CATEGORIES.EMBODIED },
   { name: 'Product Hunt', url: 'https://www.producthunt.com/topics/artificial-intelligence', type: 'html', category: CATEGORIES.COMMUNITY },
   { name: 'V2EX', url: 'https://www.v2ex.com/api/topics/hot.json', type: 'api', category: CATEGORIES.COMMUNITY }
 ];
@@ -97,8 +154,8 @@ export const CHINA_SOURCES = [
 
 // 国内热搜
 export const CHINA_TRENDING_SOURCES = [
-  { name: '知乎热榜', url: 'https://www.zhihu.com/hot', type: 'html', keywords: ['AI', '人工智能', '大模型', 'GPT', 'ChatGPT', '机器学习'], category: CATEGORIES.CHINA },
-  { name: '微博热搜', url: 'https://weibo.com/ajax/side/hotSearch', type: 'api', keywords: ['科技', 'AI', '大模型', '人工智能', '智能'], category: CATEGORIES.CHINA }
+  { name: '知乎热榜', url: 'https://www.zhihu.com/hot', type: 'html', keywords: ['AI', '人工智能', '大模型', 'GPT', '机器人', '自动驾驶', '智能驾驶'], category: CATEGORIES.CHINA },
+  { name: '微博热搜', url: 'https://weibo.com/ajax/side/hotSearch', type: 'api', keywords: ['科技', 'AI', '大模型', '人工智能', '智能', '机器人', '自动驾驶'], category: CATEGORIES.CHINA }
 ];
 
 // 汇总所有数据源
@@ -107,6 +164,8 @@ export const ALL_SOURCES = [
   ...PAPERS_SOURCES,
   ...MEDIA_SOURCES,
   ...HEX2077_SOURCES,
+  ...EMBODIED_SOURCES,
+  ...AUTO_AI_SOURCES,
   ...COMMUNITY_SOURCES,
   ...CHINA_SOURCES,
   ...CHINA_TRENDING_SOURCES
@@ -115,10 +174,10 @@ export const ALL_SOURCES = [
 // 爬虫配置
 export const CRAWLER_CONFIG = {
   concurrency: 5,
-  timeout: 15000,       // 提高到 15 秒
+  timeout: 15000,
   retries: 1,
   retryDelay: 2000,
-  requestDelay: 800,    // 缩短间隔
+  requestDelay: 800,
   userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 };
 
@@ -126,7 +185,7 @@ export const CRAWLER_CONFIG = {
 export const SUMMARIZER_CONFIG = {
   model: 'gemini-2.0-flash',
   maxRequestsPerMinute: 15,
-  maxSummaryLength: 80,     // 增加摘要长度
-  fallbackLength: 150,      // 增加降级截断长度
+  maxSummaryLength: 80,
+  fallbackLength: 150,
   contentThreshold: 200
 };

@@ -9,7 +9,7 @@ import { HotDetector } from './processor/hot-detector.js';
 import { Summarizer } from './processor/summarizer.js';
 import { Renderer } from './renderer/index.js';
 import { getTodayDate } from './utils.js';
-import { CATEGORIES } from './config.js';
+import { CATEGORIES, ALL_SOURCES } from './config.js';
 
 async function main() {
   const startTime = Date.now();
@@ -52,19 +52,21 @@ async function main() {
     console.log('');
     console.log('[Main] === 阶段 4/4: 页面渲染 ===');
 
-    // 分类整理（扩展到 5+ 类）
+    // 分类整理（9 大板块）
     const hotItems = summarizedItems.filter(i => i.isHot).slice(0, 3);
     const githubItems = summarizedItems.filter(i => i.category === CATEGORIES.GITHUB);
     const labsItems = summarizedItems.filter(i => i.category === CATEGORIES.LABS);
     const papersItems = summarizedItems.filter(i => i.category === CATEGORIES.PAPERS);
     const mediaItems = summarizedItems.filter(i => i.category === CATEGORIES.MEDIA);
+    const embodiedItems = summarizedItems.filter(i => i.category === CATEGORIES.EMBODIED);
+    const autoAiItems = summarizedItems.filter(i => i.category === CATEGORIES.AUTO_AI);
     const weeklyItems = summarizedItems.filter(i => i.category === CATEGORIES.WEEKLY);
     const communityItems = summarizedItems.filter(i => i.category === CATEGORIES.COMMUNITY);
     const chinaItems = summarizedItems.filter(i => i.category === CATEGORIES.CHINA);
 
     // 计算热度指数
     const heatIndex = Math.min(99, Math.round(
-      (summarizedItems.length * 0.5) + (hotItems.length * 20) + (githubItems.length * 2)
+      (summarizedItems.length * 0.4) + (hotItems.length * 20) + (githubItems.length * 2) + (embodiedItems.length * 2) + (autoAiItems.length * 2)
     ));
 
     // 构建 DailyData
@@ -77,12 +79,14 @@ async function main() {
       labs: labsItems.slice(0, 15),
       papers: papersItems.slice(0, 15),
       media: mediaItems.slice(0, 30),
+      embodied: embodiedItems.slice(0, 15),
+      autoAi: autoAiItems.slice(0, 15),
       weekly: weeklyItems.slice(0, 10),
       community: communityItems.slice(0, 20),
       china: chinaItems.slice(0, 15),
       stats: {
-        totalSources: 35,
-        successSources: 35 - crawlErrors.length,
+        totalSources: ALL_SOURCES.length,
+        successSources: ALL_SOURCES.length - crawlErrors.length,
         failedSources: crawlErrors
       }
     };

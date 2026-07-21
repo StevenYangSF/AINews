@@ -6,7 +6,7 @@
 import * as cheerio from 'cheerio';
 import RssParser from 'rss-parser';
 import { safeFetchText, safeFetchJSON, isWithin24Hours } from '../utils.js';
-import { LABS_SOURCES, PAPERS_SOURCES, MEDIA_SOURCES, HEX2077_SOURCES, CHINA_SOURCES, CATEGORIES } from '../config.js';
+import { LABS_SOURCES, PAPERS_SOURCES, MEDIA_SOURCES, HEX2077_SOURCES, EMBODIED_SOURCES, AUTO_AI_SOURCES, CHINA_SOURCES, CATEGORIES } from '../config.js';
 
 const rssParser = new RssParser({
   timeout: 15000,
@@ -297,6 +297,8 @@ export async function crawlSites() {
     ...PAPERS_SOURCES,
     ...MEDIA_SOURCES,
     ...HEX2077_SOURCES,
+    ...EMBODIED_SOURCES,
+    ...AUTO_AI_SOURCES,
     ...CHINA_SOURCES
   ];
 
