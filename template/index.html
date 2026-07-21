@@ -84,6 +84,28 @@
       <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="china">🇨🇳 国内</button>
     </nav>
 
+    <!-- 关键词过滤模块 -->
+    <section id="keyword-filter" class="mb-6">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">🔍 关键词筛选</span>
+        <button id="keyword-clear" class="text-[11px] text-blue-500 hover:text-blue-700 dark:text-blue-400 font-medium hidden">清除筛选</button>
+      </div>
+      <div id="keyword-pills" class="flex flex-wrap gap-2">
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="GPT">GPT</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="Claude">Claude</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="Agent">Agent</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="机器人">机器人</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="自动驾驶">自动驾驶</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="开源">开源</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="VLA">VLA</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="大模型">大模型</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="芯片">芯片</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="Tesla">Tesla</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="华为">华为</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="OpenAI">OpenAI</button>
+      </div>
+    </section>
+
     <!-- Tab 内容区 -->
     <div id="tab-github" class="tab-content"><div id="github-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
     <div id="tab-embodied" class="tab-content hidden"><div id="embodied-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
@@ -247,6 +269,63 @@
     }
 
     init();
+
+    // ===== 关键词过滤 =====
+    let activeKeyword = null;
+
+    function filterByKeyword(keyword) {
+      activeKeyword = keyword;
+      const allCards = document.querySelectorAll('.tab-content .card');
+
+      if (!keyword) {
+        // 清除筛选 → 显示全部
+        allCards.forEach(card => card.style.display = '');
+        document.getElementById('keyword-clear').classList.add('hidden');
+        document.querySelectorAll('.kw-pill').forEach(p => {
+          p.classList.remove('bg-blue-500', 'text-white', 'dark:bg-blue-600');
+          p.classList.add('bg-gray-100', 'dark:bg-gray-800', 'text-gray-600', 'dark:text-gray-400');
+        });
+        return;
+      }
+
+      const kw = keyword.toLowerCase();
+      allCards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(kw) ? '' : 'none';
+      });
+
+      document.getElementById('keyword-clear').classList.remove('hidden');
+    }
+
+    // 关键词按钮点击
+    document.querySelectorAll('.kw-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const kw = pill.dataset.kw;
+
+        // 切换选中状态
+        if (activeKeyword === kw) {
+          filterByKeyword(null);
+          return;
+        }
+
+        // 重置所有按钮样式
+        document.querySelectorAll('.kw-pill').forEach(p => {
+          p.classList.remove('bg-blue-500', 'text-white', 'dark:bg-blue-600');
+          p.classList.add('bg-gray-100', 'dark:bg-gray-800', 'text-gray-600', 'dark:text-gray-400');
+        });
+
+        // 激活当前按钮
+        pill.classList.remove('bg-gray-100', 'dark:bg-gray-800', 'text-gray-600', 'dark:text-gray-400');
+        pill.classList.add('bg-blue-500', 'text-white', 'dark:bg-blue-600');
+
+        filterByKeyword(kw);
+      });
+    });
+
+    // 清除按钮
+    document.getElementById('keyword-clear').addEventListener('click', () => {
+      filterByKeyword(null);
+    });
   </script>
 </body>
 </html>
