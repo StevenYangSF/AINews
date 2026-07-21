@@ -1,0 +1,20 @@
+{
+  "name": "ai-news-aggregator",
+  "version": "1.0.0",
+  "description": "零运维、打开即最新的全网 AI 动态自动化聚合与智能展示系统",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "node src/main.js",
+    "dev": "node src/main.js"
+  },
+  "keywords": ["ai", "news", "aggregator", "github-actions"],
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "rss-parser": "^3.13.0",
+    "@google/generative-ai": "^0.21.0"
+  }
+}
