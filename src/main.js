@@ -52,17 +52,17 @@ async function main() {
     console.log('');
     console.log('[Main] === 阶段 4/4: 页面渲染 ===');
 
-    // 分类整理
+    // 分类整理（扩展到 5+ 类）
     const hotItems = summarizedItems.filter(i => i.isHot).slice(0, 3);
     const githubItems = summarizedItems.filter(i => i.category === CATEGORIES.GITHUB);
-    const curatedItems = summarizedItems.filter(i =>
-      [CATEGORIES.LABS, CATEGORIES.PAPERS, CATEGORIES.MEDIA].includes(i.category)
-    );
-    const communityItems = summarizedItems.filter(i =>
-      [CATEGORIES.COMMUNITY, CATEGORIES.CHINA].includes(i.category)
-    );
+    const labsItems = summarizedItems.filter(i => i.category === CATEGORIES.LABS);
+    const papersItems = summarizedItems.filter(i => i.category === CATEGORIES.PAPERS);
+    const mediaItems = summarizedItems.filter(i => i.category === CATEGORIES.MEDIA);
+    const weeklyItems = summarizedItems.filter(i => i.category === CATEGORIES.WEEKLY);
+    const communityItems = summarizedItems.filter(i => i.category === CATEGORIES.COMMUNITY);
+    const chinaItems = summarizedItems.filter(i => i.category === CATEGORIES.CHINA);
 
-    // 计算热度指数（基于总数据量和爆款数）
+    // 计算热度指数
     const heatIndex = Math.min(99, Math.round(
       (summarizedItems.length * 0.5) + (hotItems.length * 20) + (githubItems.length * 2)
     ));
@@ -74,11 +74,15 @@ async function main() {
       heatIndex,
       hotItems,
       github: githubItems.slice(0, 20),
-      curated: curatedItems.slice(0, 30),
+      labs: labsItems.slice(0, 15),
+      papers: papersItems.slice(0, 15),
+      media: mediaItems.slice(0, 30),
+      weekly: weeklyItems.slice(0, 10),
       community: communityItems.slice(0, 20),
+      china: chinaItems.slice(0, 15),
       stats: {
-        totalSources: 30,
-        successSources: 30 - crawlErrors.length,
+        totalSources: 35,
+        successSources: 35 - crawlErrors.length,
         failedSources: crawlErrors
       }
     };

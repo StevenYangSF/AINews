@@ -1,29 +1,25 @@
 /**
- * 25 精选 AI 站点爬虫
- * 覆盖官方实验室、论文与代码、行业媒体、国内生态
+ * 精选 AI 站点爬虫
+ * 覆盖官方实验室、论文与代码、行业媒体、Hex2077、国内生态
  */
 
 import * as cheerio from 'cheerio';
 import RssParser from 'rss-parser';
 import { safeFetchText, safeFetchJSON, isWithin24Hours } from '../utils.js';
-import { LABS_SOURCES, PAPERS_SOURCES, MEDIA_SOURCES, CHINA_SOURCES, INDIE_SOURCES, CATEGORIES } from '../config.js';
+import { LABS_SOURCES, PAPERS_SOURCES, MEDIA_SOURCES, HEX2077_SOURCES, CHINA_SOURCES, CATEGORIES } from '../config.js';
 
 const rssParser = new RssParser({
-  timeout: 10000,
-  headers: {
-    'User-Agent': 'Mozilla/5.0 (compatible; AINewsBot/1.0)'
-  }
+  timeout: 15000,
+  headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
 });
 
-/**
- * 通用 RSS 抓取
- */
+// ===== 通用抓取器 =====
+
 async function crawlRSS(source) {
   try {
     const feed = await rssParser.parseURL(source.url);
-    const items = (feed.items || [])
-      .filter(item => isWithin24Hours(item.pubDate || item.isoDate))
-      .slice(0, 10)
+    return (feed.items || [])
+      .slice(0, 15)
       .map(item => ({
         title: item.title || '',
         url: item.link || '',
@@ -32,16 +28,12 @@ async function crawlRSS(source) {
         publishedAt: item.pubDate || item.isoDate || new Date().toISOString(),
         content: item.contentSnippet || item.content || ''
       }));
-    return items;
   } catch (error) {
     console.warn(`[Sites] RSS 抓取失败 ${source.name}: ${error.message}`);
     return [];
   }
 }
 
-/**
- * 通用 HTML 页面抓取（提取文章列表）
- */
 async function crawlHTML(source) {
   const html = await safeFetchText(source.url);
   if (!html) return [];
@@ -49,17 +41,12 @@ async function crawlHTML(source) {
   const $ = cheerio.load(html);
   const items = [];
 
-  // 通用策略：查找文章链接
+  // 多种选择器策略
   const selectors = [
-    'article a[href]',
-    'a.post-link',
-    '.post-title a',
-    'h2 a[href]',
-    'h3 a[href]',
-    '.article-title a',
-    '.entry-title a',
-    '.card a[href]',
-    'a.stretched-link'
+    'article a[href]', 'a.post-link', '.post-title a', 'h2 a[href]',
+    'h3 a[href]', '.article-title a', '.entry-title a', '.card a[href]',
+    'a.stretched-link', '.post-card a', '.article-card a', 'a[href*="/blog/"]',
+    'a[href*="/post/"]', 'a[href*="/article/"]', 'a[href*="/news/"]'
   ];
 
   for (const selector of selectors) {
@@ -68,15 +55,13 @@ async function crawlHTML(source) {
       let href = $a.attr('href') || '';
       const title = $a.text().trim();
 
-      if (!title || title.length < 5) return;
+      if (!title || title.length < 5 || title.length > 200) return;
 
-      // 处理相对路径
       if (href.startsWith('/')) {
         const baseUrl = new URL(source.url);
         href = `${baseUrl.origin}${href}`;
       }
-
-      // 避免重复
+      if (!href.startsWith('http')) return;
       if (items.some(i => i.url === href || i.title === title)) return;
 
       items.push({
@@ -89,132 +74,211 @@ async function crawlHTML(source) {
       });
     });
 
-    if (items.length >= 5) break;
+    if (items.length >= 8) break;
   }
 
-  return items.slice(0, 10);
+  return items.slice(0, 15);
 }
 
+// ===== Hex2077 专用抓取器 =====
+
 /**
- * Hugging Face Papers 专用抓取
+ * Hex2077 日报页面（/docs/）
+ * 抓取每日 AI 资讯日报列表
  */
-async function crawlHuggingFacePapers() {
-  const html = await safeFetchText('https://huggingface.co/papers');
+async function crawlHex2077Docs() {
+  const html = await safeFetchText('https://hex2077.dev/docs/');
   if (!html) return [];
 
   const $ = cheerio.load(html);
   const items = [];
 
-  $('article a, .paper-card a, a[href*="/papers/"]').each((_, el) => {
+  $('a[href*="/docs/"]').each((_, el) => {
     const $a = $(el);
     let href = $a.attr('href') || '';
-    const title = $a.text().trim();
+    if (href === '/docs' || href === '/docs/') return;
 
-    if (!title || title.length < 10) return;
-    if (!href.includes('/papers/')) return;
+    const title = $a.find('h3').text().trim()
+      || $a.find('.font-bold').first().text().trim()
+      || $a.text().trim().slice(0, 100);
 
-    if (href.startsWith('/')) {
-      href = `https://huggingface.co${href}`;
-    }
+    if (!title || title.length < 5) return;
+    if (href.startsWith('/')) href = `https://hex2077.dev${href}`;
+    if (items.some(i => i.url === href)) return;
 
+    const desc = $a.find('p').text().trim() || '';
+
+    items.push({
+      title,
+      url: href,
+      source: 'Hex2077 日报',
+      category: CATEGORIES.MEDIA,
+      publishedAt: new Date().toISOString(),
+      content: desc.slice(0, 300)
+    });
+  });
+
+  console.log(`[Hex2077] 日报: ${items.length} 条`);
+  return items.slice(0, 10);
+}
+
+/**
+ * Hex2077 周报页面（/blog/?category=weekly）
+ */
+async function crawlHex2077Weekly() {
+  const html = await safeFetchText('https://hex2077.dev/blog/?category=weekly');
+  if (!html) {
+    // 备用：从 /blog/ 页面过滤 weekly
+    return crawlHex2077BlogFiltered('weekly');
+  }
+
+  const $ = cheerio.load(html);
+  const items = [];
+
+  $('a[href*="/blog/weekly/"]').each((_, el) => {
+    const $a = $(el);
+    let href = $a.attr('href') || '';
+    const title = $a.find('h3').text().trim()
+      || $a.find('.font-bold').first().text().trim()
+      || $a.text().trim().slice(0, 100);
+
+    if (!title || title.length < 5) return;
+    if (href.startsWith('/')) href = `https://hex2077.dev${href}`;
+    if (items.some(i => i.url === href)) return;
+
+    const desc = $a.find('p').text().trim() || '';
+
+    items.push({
+      title,
+      url: href,
+      source: 'Hex2077 周报',
+      category: CATEGORIES.WEEKLY,
+      publishedAt: new Date().toISOString(),
+      content: desc.slice(0, 300)
+    });
+  });
+
+  console.log(`[Hex2077] 周报: ${items.length} 条`);
+  return items.slice(0, 8);
+}
+
+/**
+ * Hex2077 博客页面（/blog/）
+ */
+async function crawlHex2077Blog() {
+  const html = await safeFetchText('https://hex2077.dev/blog/');
+  if (!html) return [];
+
+  const $ = cheerio.load(html);
+  const items = [];
+
+  $('a[href*="/blog/"]').each((_, el) => {
+    const $a = $(el);
+    let href = $a.attr('href') || '';
+    if (href === '/blog' || href === '/blog/' || href.includes('?category')) return;
+
+    const title = $a.find('h3').text().trim()
+      || $a.find('.font-bold').first().text().trim()
+      || $a.text().trim().slice(0, 100);
+
+    if (!title || title.length < 5) return;
+    if (href.startsWith('/')) href = `https://hex2077.dev${href}`;
+    if (items.some(i => i.url === href)) return;
+
+    const desc = $a.find('p').text().trim() || '';
+
+    items.push({
+      title,
+      url: href,
+      source: 'Hex2077 博客',
+      category: CATEGORIES.MEDIA,
+      publishedAt: new Date().toISOString(),
+      content: desc.slice(0, 300)
+    });
+  });
+
+  console.log(`[Hex2077] 博客: ${items.length} 条`);
+  return items.slice(0, 10);
+}
+
+/**
+ * 备用：从 /blog/ 过滤 weekly 类型
+ */
+async function crawlHex2077BlogFiltered(filter) {
+  const html = await safeFetchText('https://hex2077.dev/blog/');
+  if (!html) return [];
+
+  const $ = cheerio.load(html);
+  const items = [];
+
+  $(`a[href*="/blog/${filter}/"]`).each((_, el) => {
+    const $a = $(el);
+    let href = $a.attr('href') || '';
+    const title = $a.find('h3').text().trim() || $a.text().trim().slice(0, 100);
+    if (!title || title.length < 5) return;
+    if (href.startsWith('/')) href = `https://hex2077.dev${href}`;
+    if (items.some(i => i.url === href)) return;
+    const desc = $a.find('p').text().trim() || '';
+    items.push({ title, url: href, source: `Hex2077 ${filter}`, category: CATEGORIES.WEEKLY, publishedAt: new Date().toISOString(), content: desc.slice(0, 300) });
+  });
+
+  return items.slice(0, 8);
+}
+
+/**
+ * Hex2077 导航站（nav.hex2077.dev）— 抓取 AI 工具推荐
+ */
+async function crawlHex2077Nav() {
+  const html = await safeFetchText('https://nav.hex2077.dev/');
+  if (!html) return [];
+
+  const $ = cheerio.load(html);
+  const items = [];
+
+  // 导航站通常有卡片链接
+  $('a[href^="http"]').each((_, el) => {
+    const $a = $(el);
+    const href = $a.attr('href') || '';
+    const title = $a.text().trim() || $a.attr('title') || '';
+
+    if (!title || title.length < 3 || title.length > 100) return;
+    if (href.includes('nav.hex2077.dev')) return; // 跳过自身链接
+    if (href.includes('github.com/justlovemaki')) return; // 跳过源码链接
     if (items.some(i => i.url === href)) return;
 
     items.push({
       title,
       url: href,
-      source: 'Hugging Face Papers',
-      category: CATEGORIES.PAPERS,
+      source: 'Hex2077 导航',
+      category: CATEGORIES.COMMUNITY,
       publishedAt: new Date().toISOString(),
       content: ''
     });
   });
 
-  return items.slice(0, 10);
+  console.log(`[Hex2077] 导航: ${items.length} 条`);
+  return items.slice(0, 15);
 }
 
-/**
- * arXiv RSS 抓取
- */
-async function crawlArxiv(source) {
-  return crawlRSS(source);
-}
+// ===== 调度逻辑 =====
 
-/**
- * Hex2077 专用抓取（Next.js SSR 页面，提取日报和周报链接）
- */
-async function crawlHex2077() {
-  const html = await safeFetchText('https://hex2077.dev/');
-  if (!html) return [];
-
-  const $ = cheerio.load(html);
-  const items = [];
-
-  // 日报链接: /docs/2026-07/2026-07-21/
-  $('a[href*="/docs/"]').each((_, el) => {
-    const $a = $(el);
-    let href = $a.attr('href') || '';
-    // 提取标题（h3 或 .font-bold 文本）
-    const title = $a.find('h3').text().trim()
-      || $a.find('.font-bold').first().text().trim()
-      || $a.text().trim();
-
-    if (!title || title.length < 5) return;
-    if (href.startsWith('/')) href = `https://hex2077.dev${href}`;
-    if (items.some(i => i.url === href)) return;
-
-    // 提取描述
-    const desc = $a.find('p').text().trim() || '';
-
-    items.push({
-      title,
-      url: href,
-      source: 'Hex2077',
-      category: CATEGORIES.MEDIA,
-      publishedAt: new Date().toISOString(),
-      content: desc
-    });
-  });
-
-  // 周报/博客链接: /blog/weekly/...
-  $('a[href*="/blog/"]').each((_, el) => {
-    const $a = $(el);
-    let href = $a.attr('href') || '';
-    const title = $a.find('h3').text().trim()
-      || $a.find('.font-bold').first().text().trim()
-      || $a.text().trim();
-
-    if (!title || title.length < 5) return;
-    if (href.startsWith('/')) href = `https://hex2077.dev${href}`;
-    if (items.some(i => i.url === href)) return;
-
-    const desc = $a.find('p').text().trim() || '';
-
-    items.push({
-      title,
-      url: href,
-      source: 'Hex2077',
-      category: CATEGORIES.MEDIA,
-      publishedAt: new Date().toISOString(),
-      content: desc
-    });
-  });
-
-  return items.slice(0, 10);
-}
-
-/**
- * 抓取单个数据源
- */
 async function crawlSource(source) {
   console.log(`[Sites] 抓取 ${source.name}...`);
 
   try {
-    if (source.type === 'rss') {
-      return await crawlRSS(source);
-    } else if (source.type === 'custom-hex2077') {
-      return await crawlHex2077();
-    } else {
-      return await crawlHTML(source);
+    switch (source.type) {
+      case 'rss':
+        return await crawlRSS(source);
+      case 'custom-hex2077-docs':
+        return await crawlHex2077Docs();
+      case 'custom-hex2077-weekly':
+        return await crawlHex2077Weekly();
+      case 'custom-hex2077-blog':
+        return await crawlHex2077Blog();
+      case 'custom-hex2077-nav':
+        return await crawlHex2077Nav();
+      default:
+        return await crawlHTML(source);
     }
   } catch (error) {
     console.warn(`[Sites] ${source.name} 抓取失败: ${error.message}`);
@@ -223,13 +287,19 @@ async function crawlSource(source) {
 }
 
 /**
- * 抓取所有 25 精选站点
- * @returns {Promise<Array>} RawItem 数组
+ * 抓取所有精选站点
  */
 export async function crawlSites() {
-  console.log('[Crawler] 开始抓取 25 精选站点...');
+  console.log('[Crawler] 开始抓取精选站点...');
 
-  const allSources = [...LABS_SOURCES, ...PAPERS_SOURCES, ...MEDIA_SOURCES, ...INDIE_SOURCES, ...CHINA_SOURCES];
+  const allSources = [
+    ...LABS_SOURCES,
+    ...PAPERS_SOURCES,
+    ...MEDIA_SOURCES,
+    ...HEX2077_SOURCES,
+    ...CHINA_SOURCES
+  ];
+
   const results = [];
 
   for (const source of allSources) {
@@ -237,6 +307,6 @@ export async function crawlSites() {
     results.push(...items);
   }
 
-  console.log(`[Crawler] 25 精选站点: 共获取 ${results.length} 条`);
+  console.log(`[Crawler] 精选站点: 共获取 ${results.length} 条`);
   return results;
 }

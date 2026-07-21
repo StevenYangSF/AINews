@@ -10,159 +10,174 @@
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Segoe UI', 'sans-serif']
-          }
+          fontFamily: { sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'sans-serif'] },
+          borderRadius: { '2xl': '1rem', '3xl': '1.5rem' }
         }
       }
     }
   </script>
   <style>
-    .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
-    .dark .tab-active { border-bottom: 2px solid #60a5fa; color: #60a5fa; }
-    .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
-    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-    .dark .card-hover:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
-    .hot-badge { animation: pulse 2s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-    .tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-right: 4px; }
+    .tab-active { background: #000; color: #fff; }
+    .dark .tab-active { background: #fff; color: #000; }
+    .card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+    .dark .card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+    .hot-pulse { animation: pulse 2.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    .tag { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; letter-spacing:0.02em; }
+    .gradient-hot { background: linear-gradient(135deg, #ff6b35 0%, #f7c948 100%); }
+    .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .line-clamp-3 { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+    .glass { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans">
+<body class="bg-[#f5f5f7] dark:bg-[#1d1d1f] text-[#1d1d1f] dark:text-[#f5f5f7] min-h-screen font-sans antialiased">
 
   <!-- Header -->
-  <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div>
-        <h1 class="text-xl font-semibold tracking-tight">🤖 AI Daily</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400" id="header-date">加载中...</p>
+  <header class="sticky top-0 z-50 bg-white/70 dark:bg-[#1d1d1f]/80 glass border-b border-gray-200/50 dark:border-gray-700/50">
+    <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl gradient-hot flex items-center justify-center">
+          <span class="text-white text-sm font-bold">AI</span>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight">AI Daily</h1>
+          <p class="text-xs text-gray-500 dark:text-gray-400" id="header-date">加载中...</p>
+        </div>
       </div>
       <div class="flex items-center gap-4">
-        <div class="text-right hidden sm:block">
-          <div class="text-xs text-gray-500 dark:text-gray-400">热度指数</div>
-          <div class="text-lg font-bold text-orange-500" id="heat-index">--</div>
+        <div class="hidden sm:flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 px-3 py-1.5 rounded-full">
+          <span class="text-xs text-orange-600 dark:text-orange-400 font-medium">热度</span>
+          <span class="text-sm font-bold text-orange-600 dark:text-orange-400" id="heat-index">--</span>
         </div>
-        <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" aria-label="切换主题">
-          <svg class="w-5 h-5 hidden dark:block" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/></svg>
-          <svg class="w-5 h-5 dark:hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+        <button id="theme-toggle" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" aria-label="切换主题">
+          <svg class="w-4 h-4 hidden dark:block" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/></svg>
+          <svg class="w-4 h-4 dark:hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
         </button>
       </div>
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 py-6">
+  <main class="max-w-7xl mx-auto px-5 py-8">
 
-    <!-- Top Banner: 今日爆款 -->
-    <section id="hot-section" class="mb-8 hidden">
-      <div class="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl p-6 border border-orange-100 dark:border-orange-800/30">
-        <h2 class="text-sm font-medium text-orange-600 dark:text-orange-400 mb-3 flex items-center gap-2">
-          <span class="hot-badge">🔥</span> 今日全网超级头条
-        </h2>
-        <div id="hot-items" class="space-y-3"></div>
+    <!-- 今日爆款 -->
+    <section id="hot-section" class="mb-10 hidden">
+      <div class="bg-white dark:bg-[#2d2d2f] rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="hot-pulse text-lg">🔥</span>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">今日超级头条</h2>
+        </div>
+        <div id="hot-items" class="space-y-4"></div>
       </div>
     </section>
 
-    <!-- Tabs -->
-    <nav class="flex border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto">
-      <button class="tab-btn tab-active px-4 py-3 text-sm font-medium whitespace-nowrap" data-tab="github">🚀 GitHub 趋势</button>
-      <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap" data-tab="curated">⚡ 精选速览</button>
-      <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap" data-tab="community">💬 社区热搜</button>
+    <!-- Tab 导航 -->
+    <nav class="flex flex-wrap gap-2 mb-8 sticky top-[73px] z-40 bg-[#f5f5f7]/80 dark:bg-[#1d1d1f]/80 glass py-3 -mx-5 px-5">
+      <button class="tab-btn tab-active px-4 py-2 rounded-full text-xs font-semibold transition-all" data-tab="github">🚀 GitHub</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="labs">🧪 实验室</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="media">📰 行业资讯</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="weekly">📋 深度周报</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="papers">📄 论文</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="community">💬 社区</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="china">🇨🇳 国内</button>
     </nav>
 
-    <!-- Tab Content -->
-    <div id="tab-github" class="tab-content">
-      <div id="github-list" class="grid gap-4 sm:grid-cols-2"></div>
-    </div>
-    <div id="tab-curated" class="tab-content hidden">
-      <div id="curated-list" class="grid gap-4 sm:grid-cols-2"></div>
-    </div>
-    <div id="tab-community" class="tab-content hidden">
-      <div id="community-list" class="grid gap-4 sm:grid-cols-2"></div>
-    </div>
-
-    <!-- Empty State -->
-    <div id="empty-state" class="hidden text-center py-20">
-      <p class="text-gray-400 text-lg">暂无数据，请稍后刷新</p>
-    </div>
-
-    <!-- Error State -->
-    <div id="error-state" class="hidden text-center py-20">
-      <p class="text-red-400 text-lg">⚠️ 数据加载异常</p>
-      <p class="text-gray-500 text-sm mt-2" id="error-detail"></p>
-    </div>
+    <!-- Tab 内容区 -->
+    <div id="tab-github" class="tab-content"><div id="github-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
+    <div id="tab-labs" class="tab-content hidden"><div id="labs-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
+    <div id="tab-media" class="tab-content hidden"><div id="media-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
+    <div id="tab-weekly" class="tab-content hidden"><div id="weekly-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2"></div></div>
+    <div id="tab-papers" class="tab-content hidden"><div id="papers-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
+    <div id="tab-community" class="tab-content hidden"><div id="community-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
+    <div id="tab-china" class="tab-content hidden"><div id="china-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
   </main>
 
   <!-- Footer -->
-  <footer class="max-w-6xl mx-auto px-4 py-8 border-t border-gray-200 dark:border-gray-800">
+  <footer class="max-w-7xl mx-auto px-5 py-8 border-t border-gray-200 dark:border-gray-800">
     <div class="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-400">
-      <span id="footer-stats">数据源统计加载中...</span>
-      <span>Powered by GitHub Actions + Gemini AI</span>
+      <span id="footer-stats">数据加载中...</span>
+      <span>Powered by GitHub Actions · Gemini AI</span>
     </div>
   </footer>
 
   <script>
-    // ===== 数据注入点 =====
     const DATA = __DAILY_DATA__;
 
-    // ===== 主题切换 =====
-    function initTheme() {
+    // ===== Theme =====
+    (function(){
       const saved = localStorage.getItem('theme');
       if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
       }
-    }
-    initTheme();
-
-    document.getElementById('theme-toggle').addEventListener('click', () => {
+    })();
+    document.getElementById('theme-toggle').onclick = () => {
       document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-    });
+    };
 
-    // ===== Tab 切换 =====
+    // ===== Tabs =====
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('tab-active');
+          b.classList.add('bg-gray-200/60', 'dark:bg-gray-800/60', 'text-gray-600', 'dark:text-gray-400');
+        });
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         btn.classList.add('tab-active');
+        btn.classList.remove('bg-gray-200/60', 'dark:bg-gray-800/60', 'text-gray-600', 'dark:text-gray-400');
         document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
       });
     });
 
-    // ===== 渲染函数 =====
+    // ===== Render =====
+    const tagColors = {
+      '模型发布': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+      '开源工具': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+      'AI Infra': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+      '行业商业': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+      '论文解读': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
+      'AI 安全': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+      '智能体': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+      '产品应用': 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'
+    };
+
     function renderCard(item) {
-      const tags = (item.tags || []).map(t => {
-        const colors = {
-          '模型发布': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-          '开源工具': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-          'AI Infra': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-          '行业商业': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-          '论文解读': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300'
-        };
-        return `<span class="tag ${colors[t] || 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}">${t}</span>`;
-      }).join('');
+      const tags = (item.tags || []).map(t =>
+        `<span class="tag ${tagColors[t] || 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}">${t}</span>`
+      ).join('');
 
-      const stars = item.metadata?.stars ? `<span class="text-yellow-500">⭐ +${item.metadata.stars}</span>` : '';
-      const lang = item.metadata?.language ? `<span class="text-xs text-gray-500">${item.metadata.language}</span>` : '';
-      const score = item.score ? `<span class="text-xs text-gray-400">🔥 ${item.score}</span>` : '';
+      const stars = item.metadata?.stars ? `<div class="flex items-center gap-1 text-yellow-500 text-xs font-semibold"><span>⭐</span><span>+${item.metadata.stars.toLocaleString()}</span></div>` : '';
+      const lang = item.metadata?.language ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-mono">${item.metadata.language}</span>` : '';
       const sources = (item.sources || [item.source || '']).filter(Boolean);
-      const sourceText = sources.length > 1 ? `${sources[0]} +${sources.length - 1}` : sources[0] || '';
-
+      const sourceText = sources[0] || '';
       const mainUrl = (item.urls && item.urls[0]) || item.url || '#';
 
       return `
-        <a href="${mainUrl}" target="_blank" rel="noopener" class="block bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 card-hover">
-          <div class="flex items-start justify-between gap-2 mb-2">
-            <h3 class="font-medium text-sm leading-snug line-clamp-2">${item.title}</h3>
+        <a href="${mainUrl}" target="_blank" rel="noopener" class="card block bg-white dark:bg-[#2d2d2f] rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm">
+          <div class="flex items-start justify-between gap-2 mb-3">
+            <h3 class="font-semibold text-[15px] leading-snug line-clamp-2 flex-1">${item.title}</h3>
             ${stars}
           </div>
-          ${item.summary ? `<p class="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">${item.summary}</p>` : ''}
-          <div class="flex items-center justify-between mt-auto">
-            <div>${tags}</div>
-            <div class="flex items-center gap-2 text-xs text-gray-400">
-              ${lang} ${score}
-              <span>${sourceText}</span>
-            </div>
+          ${item.summary ? `<p class="text-[13px] text-gray-500 dark:text-gray-400 mb-3 line-clamp-3 leading-relaxed">${item.summary}</p>` : (item.content ? `<p class="text-[13px] text-gray-500 dark:text-gray-400 mb-3 line-clamp-2 leading-relaxed">${item.content.slice(0,120)}</p>` : '')}
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex flex-wrap gap-1">${tags} ${lang}</div>
+            <span class="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap font-medium">${sourceText}</span>
           </div>
+        </a>
+      `;
+    }
+
+    function renderWeeklyCard(item) {
+      const mainUrl = (item.urls && item.urls[0]) || item.url || '#';
+      const sources = (item.sources || [item.source || '']).filter(Boolean);
+      return `
+        <a href="${mainUrl}" target="_blank" rel="noopener" class="card block bg-white dark:bg-[#2d2d2f] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">📋 周报</span>
+            <span class="text-[11px] text-gray-400">${sources[0] || ''}</span>
+          </div>
+          <h3 class="font-bold text-lg leading-snug mb-3">${item.title}</h3>
+          ${item.summary || item.content ? `<p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed">${item.summary || item.content?.slice(0,200)}</p>` : ''}
         </a>
       `;
     }
@@ -171,61 +186,53 @@
       const mainUrl = (item.urls && item.urls[0]) || item.url || '#';
       const sources = (item.sources || []).join(' · ');
       return `
-        <a href="${mainUrl}" target="_blank" rel="noopener" class="block hover:bg-orange-50 dark:hover:bg-orange-900/10 rounded-lg p-3 -mx-3 transition-colors">
-          <h3 class="font-semibold text-base mb-1">${item.title}</h3>
-          ${item.summary ? `<p class="text-sm text-gray-600 dark:text-gray-300">${item.summary}</p>` : ''}
-          <p class="text-xs text-gray-400 mt-1">${sources}</p>
+        <a href="${mainUrl}" target="_blank" rel="noopener" class="block p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors -mx-2">
+          <h3 class="font-bold text-base mb-1.5 leading-snug">${item.title}</h3>
+          ${item.summary ? `<p class="text-sm text-gray-500 dark:text-gray-400 mb-2">${item.summary}</p>` : ''}
+          <p class="text-[11px] text-gray-400 font-medium">${sources}</p>
         </a>
       `;
     }
 
-    // ===== 页面初始化 =====
-    function init() {
-      if (!DATA || !DATA.date) {
-        document.getElementById('error-state').classList.remove('hidden');
-        document.getElementById('error-detail').textContent = '未找到数据文件';
-        return;
-      }
+    function renderEmpty(msg) {
+      return `<p class="text-gray-400 col-span-full text-center py-16 text-sm">${msg}</p>`;
+    }
 
-      // Header
-      document.getElementById('header-date').textContent = `📅 ${DATA.date} · 更新于 ${new Date(DATA.updatedAt).toLocaleTimeString('zh-CN')}`;
+    // ===== Init =====
+    function init() {
+      if (!DATA || !DATA.date) return;
+
+      document.getElementById('header-date').textContent = `${DATA.date} · ${new Date(DATA.updatedAt).toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'})} 更新`;
       document.getElementById('heat-index').textContent = DATA.heatIndex || '--';
 
-      // Hot Items
-      if (DATA.hotItems && DATA.hotItems.length > 0) {
+      if (DATA.hotItems?.length > 0) {
         document.getElementById('hot-section').classList.remove('hidden');
         document.getElementById('hot-items').innerHTML = DATA.hotItems.map(renderHotItem).join('');
       }
 
-      // GitHub Tab
-      const githubList = document.getElementById('github-list');
-      if (DATA.github && DATA.github.length > 0) {
-        githubList.innerHTML = DATA.github.map(renderCard).join('');
-      } else {
-        githubList.innerHTML = '<p class="text-gray-400 col-span-2 text-center py-8">暂无 GitHub 趋势数据</p>';
+      const sections = {
+        'github-list': { data: DATA.github, render: renderCard },
+        'labs-list': { data: DATA.labs, render: renderCard },
+        'media-list': { data: DATA.media, render: renderCard },
+        'weekly-list': { data: DATA.weekly, render: renderWeeklyCard },
+        'papers-list': { data: DATA.papers, render: renderCard },
+        'community-list': { data: DATA.community, render: renderCard },
+        'china-list': { data: DATA.china, render: renderCard },
+      };
+
+      for (const [id, { data, render }] of Object.entries(sections)) {
+        const el = document.getElementById(id);
+        if (data?.length > 0) {
+          el.innerHTML = data.map(render).join('');
+        } else {
+          el.innerHTML = renderEmpty('暂无数据');
+        }
       }
 
-      // Curated Tab
-      const curatedList = document.getElementById('curated-list');
-      if (DATA.curated && DATA.curated.length > 0) {
-        curatedList.innerHTML = DATA.curated.map(renderCard).join('');
-      } else {
-        curatedList.innerHTML = '<p class="text-gray-400 col-span-2 text-center py-8">暂无精选数据</p>';
-      }
-
-      // Community Tab
-      const communityList = document.getElementById('community-list');
-      if (DATA.community && DATA.community.length > 0) {
-        communityList.innerHTML = DATA.community.map(renderCard).join('');
-      } else {
-        communityList.innerHTML = '<p class="text-gray-400 col-span-2 text-center py-8">暂无社区数据</p>';
-      }
-
-      // Footer stats
       if (DATA.stats) {
         document.getElementById('footer-stats').textContent =
-          `成功抓取 ${DATA.stats.successSources}/${DATA.stats.totalSources} 个数据源` +
-          (DATA.stats.failedSources.length > 0 ? ` · 失败: ${DATA.stats.failedSources.join(', ')}` : '');
+          `${DATA.stats.successSources}/${DATA.stats.totalSources} 源成功` +
+          (DATA.stats.failedSources?.length > 0 ? ` · ${DATA.stats.failedSources.length} 源跳过` : '');
       }
     }
 
