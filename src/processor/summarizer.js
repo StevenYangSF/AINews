@@ -14,6 +14,8 @@ export class Summarizer {
     this.model = null;
     this.requestCount = 0;
     this.lastRequestTime = 0;
+    this.quotaExhausted = false;  // 配额耗尽标记
+    this.consecutiveFailures = 0; // 连续失败计数
 
     if (this.apiKey) {
       const genAI = new GoogleGenerativeAI(this.apiKey);
@@ -48,7 +50,7 @@ export class Summarizer {
    * @returns {Promise<{summary: string, tags: string[]}>}
    */
   async _callGemini(title, content) {
-    if (!this.model) {
+    if (!this.model || this.quotaExhausted) {
       return this._fallback(title, content);
     }
 
@@ -73,12 +75,26 @@ export class Summarizer {
       const jsonStr = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const parsed = JSON.parse(jsonStr);
 
+      // 成功：重置连续失败计数
+      this.consecutiveFailures = 0;
+
       return {
         summary: truncate(parsed.summary || '', SUMMARIZER_CONFIG.maxSummaryLength),
         tags: (parsed.tags || []).filter(tag => TAG_CATEGORIES.includes(tag))
       };
     } catch (error) {
-      console.warn(`[Summarizer] Gemini 调用失败: ${error.message}`);
+      this.consecutiveFailures++;
+
+      // 检测配额耗尽：连续失败 3 次或明确 429 错误，立即切换全局降级
+      if (this.consecutiveFailures >= 3 || error.message.includes('429')) {
+        if (!this.quotaExhausted) {
+          this.quotaExhausted = true;
+          console.warn('[Summarizer] ⚠️ Gemini API 配额耗尽，切换为全局降级模式（截断文本替代）');
+        }
+      } else {
+        console.warn(`[Summarizer] Gemini 调用失败 (${this.consecutiveFailures}/3): ${error.message.slice(0, 100)}`);
+      }
+
       return this._fallback(title, content);
     }
   }
@@ -120,11 +136,11 @@ export class Summarizer {
     const results = [];
 
     for (const item of newsItems) {
-      // 内容不足 200 字且有标题时使用降级
+      // 内容不足 200 字、无 model、或配额耗尽时使用降级
       const contentLength = (item.content || '').length + (item.title || '').length;
 
       let summaryData;
-      if (contentLength < SUMMARIZER_CONFIG.contentThreshold || !this.model) {
+      if (contentLength < SUMMARIZER_CONFIG.contentThreshold || !this.model || this.quotaExhausted) {
         summaryData = this._fallback(item.title, item.content);
       } else {
         summaryData = await this._callGemini(item.title, item.content);
