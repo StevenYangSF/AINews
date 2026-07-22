@@ -57,13 +57,13 @@ async function main() {
     const aiModelKeywords = ['gpt', 'claude', 'gemini', 'llama', 'qwen', '通义', 'deepseek', 'kimi', 'grok', '大模型', 'llm', 'agent', '智能体', 'model', '模型', 'release', '发布', 'launch', 'foundation', 'frontier', 'reasoning', '推理', 'multimodal', '多模态', 'openai', 'anthropic', 'google', 'meta ai', '字节', 'mistral'];
     const headlineCategories = [CATEGORIES.LABS, CATEGORIES.MEDIA, CATEGORIES.CHINA, CATEGORIES.EMBODIED, CATEGORIES.AUTO_AI];
 
-    // 第一优先级：AI大模型/Agent相关的重磅新闻
+    // 第一优先级：AI大模型/Agent相关的重磅新闻（按 impactScore 排序）
     const aiModelItems = summarizedItems
       .filter(i => {
         const text = `${i.title} ${i.content || ''} ${(i.tags || []).join(' ')}`.toLowerCase();
         return aiModelKeywords.some(kw => text.includes(kw));
       })
-      .sort((a, b) => (b.hotScore || b.score || 0) - (a.hotScore || a.score || 0));
+      .sort((a, b) => (b.impactScore || 0) - (a.impactScore || 0) || (b.hotScore || b.score || 0) - (a.hotScore || a.score || 0));
 
     // 第二优先级：其他分类的热门头条
     const otherHotItems = summarizedItems

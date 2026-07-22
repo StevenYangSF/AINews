@@ -1,7 +1,12 @@
 /**
- * AI 摘要引擎
- * 支持 OpenAI API（优先）和 Google Gemini API
- * 含降级逻辑：无 API Key 或调用失败时使用截断文本
+ * AI 摘要引擎（v3）
+ * 
+ * 架构：
+ * 1. 异步任务队列：Fetcher 与 Processor 解耦，并发处理
+ * 2. 指数退避重试：超时/429 自动重试 3 次（2s, 4s, 8s）
+ * 3. 多级降级链：主模型 → 低成本模型 → 本地正则提取
+ * 
+ * 支持提供商：Gemini > Kimi > xAI > OpenAI
  */
 
 import OpenAI from 'openai';
@@ -9,19 +14,85 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { SUMMARIZER_CONFIG, TAG_CATEGORIES } from '../config.js';
 import { sleep, truncate } from '../utils.js';
 
+// ===== 指数退避重试 =====
+
+/**
+ * 带指数退避的重试执行器
+ * @param {Function} fn - 异步函数
+ * @param {number} maxRetries - 最大重试次数
+ * @param {number} baseDelay - 基础延迟（ms）
+ * @returns {Promise<any>}
+ */
+async function withExponentialBackoff(fn, maxRetries = 3, baseDelay = 2000) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const isRetryable = error.message.includes('429') ||
+                          error.message.includes('timeout') ||
+                          error.message.includes('ETIMEDOUT') ||
+                          error.message.includes('rate') ||
+                          error.status === 429 ||
+                          error.status === 503;
+
+      if (!isRetryable || attempt === maxRetries) {
+        throw error;
+      }
+
+      const delay = baseDelay * Math.pow(2, attempt); // 2s, 4s, 8s
+      console.log(`[Retry] 第 ${attempt + 1} 次重试，等待 ${delay / 1000}s...`);
+      await sleep(delay);
+    }
+  }
+}
+
+// ===== 异步任务队列 =====
+
+class AsyncQueue {
+  constructor(concurrency = 3) {
+    this.concurrency = concurrency;
+    this.running = 0;
+    this.queue = [];
+  }
+
+  async push(task) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ task, resolve, reject });
+      this._drain();
+    });
+  }
+
+  async _drain() {
+    while (this.running < this.concurrency && this.queue.length > 0) {
+      const { task, resolve, reject } = this.queue.shift();
+      this.running++;
+      task()
+        .then(resolve)
+        .catch(reject)
+        .finally(() => {
+          this.running--;
+          this._drain();
+        });
+    }
+  }
+}
+
+// ===== Summarizer 主类 =====
+
 export class Summarizer {
   constructor() {
     this.openaiKey = process.env.OPENAI_API_KEY || '';
     this.geminiKey = process.env.GEMINI_API_KEY || '';
     this.xaiKey = process.env.XAI_API_KEY || '';
     this.kimiKey = process.env.KIMI_API_KEY || '';
-    this.provider = null; // 'kimi' | 'gemini' | 'xai' | 'openai' | null
+    this.provider = null;
     this.openaiClient = null;
     this.geminiModel = null;
     this.requestCount = 0;
     this.lastRequestTime = 0;
     this.quotaExhausted = false;
     this.consecutiveFailures = 0;
+    this.taskQueue = new AsyncQueue(3); // 并发 3 个 AI 调用
 
     // 优先级: Gemini (免费) > Kimi > xAI > OpenAI
     if (this.geminiKey) {
@@ -42,7 +113,7 @@ export class Summarizer {
       this.provider = 'openai';
       console.log('[Summarizer] ✅ OpenAI API 已配置 (gpt-4o-mini)');
     } else {
-      console.warn('[Summarizer] ⚠️ 未配置任何 AI API Key，将使用截断文本作为摘要');
+      console.warn('[Summarizer] ⚠️ 未配置任何 AI API Key，使用本地提取');
     }
   }
 
@@ -51,7 +122,7 @@ export class Summarizer {
    */
   async _rateLimit() {
     this.requestCount++;
-    const limit = this.provider === 'openai' ? 50 : SUMMARIZER_CONFIG.maxRequestsPerMinute;
+    const limit = this.provider === 'openai' ? 50 : this.provider === 'gemini' ? 14 : 30;
     if (this.requestCount >= limit) {
       const elapsed = Date.now() - this.lastRequestTime;
       if (elapsed < 60000) {
@@ -65,19 +136,45 @@ export class Summarizer {
   }
 
   /**
-   * 构建 prompt（精简版，减少 token 消耗）
+   * 构建 prompt（资深 AI 科技媒体主编）
    */
   _buildPrompt(title, content) {
-    // 只取前 200 字内容，大幅减少 token 消耗
-    const shortContent = content ? content.slice(0, 200) : '';
-    return `根据标题和内容，1)用中文生成≤50字摘要 2)从[${TAG_CATEGORIES.join(',')}]选1-3个标签。
+    const shortContent = content ? content.slice(0, 500) : '';
+    return `你是一位资深的 AI 科技媒体主编与技术专家。从以下原始文本中提取高信息浓度的资讯。
+
+规则：
+- 去粗取精：忽略广告、营销废话
+- 准确翻译：外文翻译为中文技术语境表达，保留专有名词(LLM/RAG/Transformer等)
+- 客观评分(1.0-5.0)：5.0=划时代突破 4.0-4.9=重磅更新 3.0-3.9=常规更新 1.0-2.9=软文
+
+输入：
 标题：${title}
-内容：${shortContent}
-回复JSON：{"summary":"摘要","tags":["标签"]}`;
+内容：${shortContent || '无详细内容'}
+
+仅输出合法JSON（不要markdown标记）：
+{"title":"精炼中文标题(≤20字)","tldr":"一句话核心要点(≤50字)","key_takeaways":["要点1","要点2"],"category":"从[${TAG_CATEGORIES.join(',')}]选一个","impact_score":4.0,"tags":["标签1","标签2"]}`;
   }
 
   /**
-   * 调用 OpenAI 兼容 API（支持 OpenAI / xAI Grok）
+   * 解析 AI 响应 JSON
+   */
+  _parseResponse(text) {
+    const jsonStr = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const parsed = JSON.parse(jsonStr);
+    const summary = parsed.tldr || parsed.summary || '';
+    const tags = (parsed.tags || []).filter(tag => TAG_CATEGORIES.includes(tag));
+
+    return {
+      summary: truncate(summary, SUMMARIZER_CONFIG.maxSummaryLength),
+      tags: tags.length > 0 ? tags : (parsed.category ? [parsed.category] : []),
+      impactScore: parsed.impact_score || 0,
+      keyTakeaways: parsed.key_takeaways || [],
+      refinedTitle: parsed.title || ''
+    };
+  }
+
+  /**
+   * 调用 OpenAI 兼容 API（含指数退避重试 + 模型降级）
    */
   async _callOpenAI(title, content) {
     if (!this.openaiClient || this.quotaExhausted) {
@@ -86,36 +183,55 @@ export class Summarizer {
 
     await this._rateLimit();
 
-    const model = this.provider === 'xai' ? 'grok-3-mini-fast' : this.provider === 'kimi' ? 'moonshot-v1-8k' : 'gpt-4o-mini';
+    // 主模型
+    const primaryModel = this.provider === 'xai' ? 'grok-3-mini-fast'
+      : this.provider === 'kimi' ? 'moonshot-v1-8k'
+      : 'gpt-4o-mini';
 
+    // 降级模型（低成本/高速）
+    const fallbackModel = this.provider === 'openai' ? 'gpt-4o-mini' : primaryModel;
+
+    const prompt = this._buildPrompt(title, content);
+
+    // 第一步：用主模型 + 指数退避重试
     try {
-      const response = await this.openaiClient.chat.completions.create({
-        model,
-        messages: [{ role: 'user', content: this._buildPrompt(title, content) }],
-        temperature: 0.3,
-        max_tokens: 200
-      });
-
-      const text = response.choices[0]?.message?.content?.trim() || '';
-      const jsonStr = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const parsed = JSON.parse(jsonStr);
+      const result = await withExponentialBackoff(async () => {
+        const response = await this.openaiClient.chat.completions.create({
+          model: primaryModel,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.3,
+          max_tokens: 300
+        });
+        return response.choices[0]?.message?.content?.trim() || '';
+      }, 3, 2000);
 
       this.consecutiveFailures = 0;
+      return this._parseResponse(result);
 
-      return {
-        summary: truncate(parsed.summary || '', SUMMARIZER_CONFIG.maxSummaryLength),
-        tags: (parsed.tags || []).filter(tag => TAG_CATEGORIES.includes(tag))
-      };
-    } catch (error) {
+    } catch (primaryError) {
+      // 第二步：降级到低成本模型（仅 OpenAI 有不同模型可选）
+      if (this.provider === 'openai' && fallbackModel !== primaryModel) {
+        try {
+          console.warn(`[Summarizer] 主模型失败，降级到 ${fallbackModel}`);
+          const response = await this.openaiClient.chat.completions.create({
+            model: fallbackModel,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.3,
+            max_tokens: 200
+          });
+          const text = response.choices[0]?.message?.content?.trim() || '';
+          this.consecutiveFailures = 0;
+          return this._parseResponse(text);
+        } catch { /* 降级也失败，走本地 */ }
+      }
+
+      // 第三步：标记配额耗尽
       this.consecutiveFailures++;
-
-      if (this.consecutiveFailures >= 3 || error.message.includes('429') || error.message.includes('insufficient_quota')) {
+      if (this.consecutiveFailures >= 3 || primaryError.message.includes('429') || primaryError.message.includes('insufficient_quota')) {
         if (!this.quotaExhausted) {
           this.quotaExhausted = true;
-          console.warn(`[Summarizer] ⚠️ ${this.provider} API 不可用，切换降级模式: ${error.message.slice(0, 80)}`);
+          console.warn(`[Summarizer] ⚠️ ${this.provider} API 耗尽，切换本地提取: ${primaryError.message.slice(0, 60)}`);
         }
-      } else {
-        console.warn(`[Summarizer] ${this.provider} 调用失败 (${this.consecutiveFailures}/3): ${error.message.slice(0, 100)}`);
       }
 
       return this._fallback(title, content);
@@ -123,7 +239,7 @@ export class Summarizer {
   }
 
   /**
-   * 调用 Gemini API
+   * 调用 Gemini API（含指数退避重试）
    */
   async _callGemini(title, content) {
     if (!this.geminiModel || this.quotaExhausted) {
@@ -133,27 +249,22 @@ export class Summarizer {
     await this._rateLimit();
 
     try {
-      const result = await this.geminiModel.generateContent(this._buildPrompt(title, content));
-      const text = result.response.text().trim();
-      const jsonStr = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const parsed = JSON.parse(jsonStr);
+      const result = await withExponentialBackoff(async () => {
+        const res = await this.geminiModel.generateContent(this._buildPrompt(title, content));
+        return res.response.text().trim();
+      }, 3, 2000);
 
       this.consecutiveFailures = 0;
+      return this._parseResponse(result);
 
-      return {
-        summary: truncate(parsed.summary || '', SUMMARIZER_CONFIG.maxSummaryLength),
-        tags: (parsed.tags || []).filter(tag => TAG_CATEGORIES.includes(tag))
-      };
     } catch (error) {
       this.consecutiveFailures++;
 
       if (this.consecutiveFailures >= 3 || error.message.includes('429')) {
         if (!this.quotaExhausted) {
           this.quotaExhausted = true;
-          console.warn(`[Summarizer] ⚠️ Gemini API 不可用，切换降级模式: ${error.message.slice(0, 80)}`);
+          console.warn(`[Summarizer] ⚠️ Gemini API 耗尽，切换本地提取: ${error.message.slice(0, 60)}`);
         }
-      } else {
-        console.warn(`[Summarizer] Gemini 调用失败 (${this.consecutiveFailures}/3): ${error.message.slice(0, 100)}`);
       }
 
       return this._fallback(title, content);
@@ -173,7 +284,7 @@ export class Summarizer {
   }
 
   /**
-   * 降级方案：截断文本 + 基于关键词的标签匹配
+   * 本地降级：正则提取 + 关键词打标签（零 API 消耗）
    */
   _fallback(title, content) {
     const text = content || title || '';
@@ -195,43 +306,50 @@ export class Summarizer {
 
     if (tags.length === 0) tags.push('行业商业');
 
-    return { summary, tags: tags.slice(0, 3) };
+    return { summary, tags: tags.slice(0, 3), impactScore: 0, keyTakeaways: [], refinedTitle: '' };
   }
 
   /**
-   * 批量生成摘要
+   * 批量生成摘要（异步队列 + 并发控制）
    */
   async summarize(newsItems) {
     if (!newsItems || newsItems.length === 0) return [];
 
-    console.log(`[Summarizer] 开始生成摘要: ${newsItems.length} 条 (provider: ${this.provider || 'fallback'})`);
+    console.log(`[Summarizer] 开始生成摘要: ${newsItems.length} 条 (provider: ${this.provider || 'local'})`);
     this.lastRequestTime = Date.now();
     this.requestCount = 0;
 
-    // 只对前 30 条高优先级内容调 AI（节省配额），其余用降级
-    const AI_LIMIT = 30;
-    const results = [];
+    // 只对前 50 条高优先级内容调 AI
+    const AI_LIMIT = 50;
+    const results = new Array(newsItems.length);
 
-    for (let i = 0; i < newsItems.length; i++) {
-      const item = newsItems[i];
-      const contentLength = (item.content || '').length + (item.title || '').length;
+    // 并发处理 AI 摘要任务
+    const promises = newsItems.map((item, i) => {
+      return this.taskQueue.push(async () => {
+        const contentLength = (item.content || '').length + (item.title || '').length;
 
-      let summaryData;
-      if (i >= AI_LIMIT || contentLength < SUMMARIZER_CONFIG.contentThreshold || !this.provider || this.quotaExhausted) {
-        summaryData = this._fallback(item.title, item.content);
-      } else {
-        summaryData = await this._callAI(item.title, item.content);
-      }
+        let summaryData;
+        if (i >= AI_LIMIT || contentLength < SUMMARIZER_CONFIG.contentThreshold || !this.provider || this.quotaExhausted) {
+          summaryData = this._fallback(item.title, item.content);
+        } else {
+          summaryData = await this._callAI(item.title, item.content);
+        }
 
-      results.push({
-        ...item,
-        summary: summaryData.summary || truncate(item.title, 50),
-        tags: summaryData.tags || []
+        results[i] = {
+          ...item,
+          summary: summaryData.summary || truncate(item.title, 50),
+          tags: summaryData.tags || [],
+          impactScore: summaryData.impactScore || 0,
+          keyTakeaways: summaryData.keyTakeaways || [],
+          refinedTitle: summaryData.refinedTitle || ''
+        };
       });
-    }
+    });
 
-    const aiCount = Math.min(AI_LIMIT, newsItems.length) - (this.quotaExhausted ? this.consecutiveFailures : 0);
-    console.log(`[Summarizer] 摘要生成完成: ${results.length} 条 (AI摘要: ~${Math.max(0, aiCount)} 条)`);
+    await Promise.all(promises);
+
+    const aiCount = Math.min(AI_LIMIT, newsItems.length);
+    console.log(`[Summarizer] 摘要完成: ${results.length} 条 (AI: ~${this.quotaExhausted ? 0 : aiCount}, 本地: ${results.length - aiCount})`);
     return results;
   }
 }
