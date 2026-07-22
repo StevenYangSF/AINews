@@ -154,11 +154,14 @@ async function main() {
     console.log(`║  📁 输出: dist/index.html + dist/data.json`);
     console.log('╚══════════════════════════════════════════════════╝');
 
+    // 强制退出，避免未关闭的异步连接导致进程挂起
+    process.exit(0);
+
   } catch (error) {
     console.error(`[Main] ❌ 致命错误: ${error.message}`);
     console.error(error.stack);
     renderer.renderError([error.message]);
-    process.exit(0); // 不以失败退出
+    process.exit(0);
   }
 }
 
