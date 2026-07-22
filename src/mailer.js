@@ -61,22 +61,20 @@ export async function sendDailyEmail({ hotItems, earlyBirdItems, earlyBirdMarkdo
 }
 
 /**
- * 构建合并邮件 HTML
+ * 构建合并邮件 HTML（深色极简科技风，小红书 3:4 卡片风格）
  */
 function buildEmailHtml({ hotItems, earlyBirdItems, date }) {
-  // 今日超级头条部分
+  // 今日超级头条
   let hotHtml = '';
   if (hotItems && hotItems.length > 0) {
     hotHtml = hotItems.map(item => {
       const url = (item.urls && item.urls[0]) || item.url || '#';
-      return `<tr><td style="padding:8px 0;border-bottom:1px solid #f0f0f0;">
-        <a href="${url}" style="color:#1d1d1f;text-decoration:none;font-weight:600;font-size:14px;">${item.title}</a>
-        ${item.summary ? `<p style="margin:4px 0 0;color:#666;font-size:12px;line-height:1.5;">${item.summary}</p>` : ''}
-      </td></tr>`;
+      const source = (item.sources || [])[0] || '';
+      return `<li class="news-item"><a href="${url}" style="color:#f8fafc;text-decoration:none;"><strong>${item.title}</strong></a>${item.summary ? `：${item.summary}` : ''}${source ? `<span class="source-tag">${source}</span>` : ''}</li>`;
     }).join('');
   }
 
-  // AI早知道部分（按领域分组）
+  // AI早知道（按领域分组）
   const domainIcons = { llm_agent: '🤖', embodied: '🦾', chip: '⚡', space: '🚀' };
   const domainLabels = { llm_agent: '海外大模型 & Agent', embodied: '具身智能 & 机器人', chip: '最新 AI 芯片 & 算力', space: '太空探索 & 火箭回收' };
 
@@ -92,42 +90,107 @@ function buildEmailHtml({ hotItems, earlyBirdItems, date }) {
     for (const [domain, items] of Object.entries(grouped)) {
       const icon = domainIcons[domain] || '📡';
       const label = domainLabels[domain] || '前沿';
-      earlyBirdHtml += `<h3 style="color:#1a73e8;font-size:14px;margin:16px 0 8px;border-left:3px solid #1a73e8;padding-left:8px;">${icon} ${label}</h3>`;
-      for (const item of items) {
+      const listItems = items.map(item => {
         const url = (item.urls && item.urls[0]) || item.url || '#';
-        earlyBirdHtml += `<p style="margin:6px 0;padding-left:12px;border-left:2px solid #e8f0fe;">
-          <a href="${url}" style="color:#1d1d1f;text-decoration:none;font-weight:600;font-size:13px;">${item.title}</a><br>
-          <span style="color:#666;font-size:12px;">${item.summary || ''}</span>
-        </p>`;
-      }
+        const source = (item.sources || [])[0] || '';
+        return `<li class="news-item"><a href="${url}" style="color:#f8fafc;text-decoration:none;"><strong>${item.title}</strong></a>${item.summary ? `：${item.summary}` : ''}${source ? `<span class="source-tag">${source}</span>` : ''}</li>`;
+      }).join('');
+      earlyBirdHtml += `
+        <div class="section-card">
+          <div class="section-title"><span>${icon}</span><span>${label}</span></div>
+          <ul class="news-list">${listItems}</ul>
+        </div>`;
     }
   }
 
-  return `
-    <div style="max-width:640px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',sans-serif;padding:16px;background:#f5f5f7;">
-      <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
-        
-        <!-- 头部 -->
-        <h1 style="font-size:20px;margin:0 0 4px;color:#1d1d1f;">🔥 AI Daily | 每日晨报</h1>
-        <p style="color:#999;font-size:12px;margin:0 0 20px;">${date} · 自动生成</p>
-        
-        <!-- 今日超级头条 -->
-        ${hotHtml ? `
-        <h2 style="font-size:16px;color:#ff6b35;margin:0 0 12px;">🔥 今日超级头条</h2>
-        <table style="width:100%;border-collapse:collapse;">${hotHtml}</table>
-        <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-        ` : ''}
-        
-        <!-- AI早知道 -->
-        ${earlyBirdHtml ? `
-        <h2 style="font-size:16px;color:#1a73e8;margin:0 0 12px;">☀️ AI早知道 | 前沿科技晨报</h2>
-        ${earlyBirdHtml}
-        ` : ''}
-        
-      </div>
-      <p style="text-align:center;color:#aaa;font-size:11px;margin-top:16px;">
-        由 AI Daily 系统自动生成 · <a href="https://stevenyangsf.github.io/AINews/" style="color:#1a73e8;">在线查看完整版</a>
-      </p>
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Daily 晨报 ${date}</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  max-width: 640px;
+  margin: 0 auto;
+  background-color: #090d16;
+  background-image: radial-gradient(circle at 15% 15%, rgba(56,189,248,0.15) 0%, transparent 45%),
+                    radial-gradient(circle at 85% 85%, rgba(129,140,248,0.12) 0%, transparent 45%);
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", sans-serif;
+  padding: 40px 32px;
+}
+.header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  border-bottom: 2px solid rgba(255,255,255,0.08); padding-bottom: 20px; margin-bottom: 24px;
+}
+.badge {
+  display: inline-block; background: linear-gradient(135deg, #38bdf8, #818cf8);
+  color: #0f172a; font-size: 12px; font-weight: 800; padding: 4px 12px;
+  border-radius: 14px; letter-spacing: 1px; text-transform: uppercase;
+}
+.title { font-size: 28px; font-weight: 900; color: #fff; margin-top: 6px; }
+.date-info { text-align: right; color: #94a3b8; font-size: 13px; }
+.section-label {
+  font-size: 16px; font-weight: 700; color: #ff6b35; margin: 20px 0 12px;
+  padding-left: 12px; border-left: 3px solid #ff6b35;
+}
+.section-card {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 16px 20px; margin-bottom: 16px;
+  backdrop-filter: blur(12px); box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 15px; font-weight: 700; color: #38bdf8; margin-bottom: 12px;
+}
+.news-list { list-style: none; }
+.news-item {
+  font-size: 13px; line-height: 1.6; color: #cbd5e1;
+  padding: 6px 0 6px 14px; position: relative; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.news-item:last-child { border-bottom: none; }
+.news-item::before { content: "•"; position: absolute; left: 0; color: #818cf8; font-weight: bold; }
+.news-item strong { color: #f8fafc; font-weight: 600; }
+.news-item a { color: #f8fafc; text-decoration: none; }
+.news-item a:hover { color: #38bdf8; }
+.source-tag {
+  display: inline-block; font-size: 10px; color: #38bdf8;
+  background: rgba(56,189,248,0.1); padding: 1px 8px; border-radius: 4px; margin-left: 6px;
+}
+.footer {
+  margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex; justify-content: space-between; color: #64748b; font-size: 11px;
+}
+.footer a { color: #38bdf8; text-decoration: none; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <span class="badge">DAILY BRIEF</span>
+      <h1 class="title">🔥 AI Daily 晨报</h1>
     </div>
-  `;
+    <div class="date-info">${date}</div>
+  </div>
+
+  ${hotHtml ? `
+  <div class="section-label">🔥 今日超级头条</div>
+  <div class="section-card">
+    <ul class="news-list">${hotHtml}</ul>
+  </div>
+  ` : ''}
+
+  ${earlyBirdHtml ? `
+  <div class="section-label" style="color:#38bdf8;border-color:#38bdf8;">☀️ AI早知道 | 前沿科技</div>
+  ${earlyBirdHtml}
+  ` : ''}
+
+  <div class="footer">
+    <span>AI Daily 全网动态聚合系统</span>
+    <a href="https://stevenyangsf.github.io/AINews/">在线查看完整版 →</a>
+  </div>
+</body>
+</html>`;
 }
