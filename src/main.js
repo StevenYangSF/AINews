@@ -52,8 +52,28 @@ async function main() {
     console.log('');
     console.log('[Main] === 阶段 4/4: 页面渲染 ===');
 
-    // 分类整理（10 大板块）
-    const hotItems = summarizedItems.filter(i => i.isHot).slice(0, 3);
+    // 选取今日超级头条（6 条）：优先国内外 AI 大新闻和科技热点
+    // 从 labs/media/china/embodied/auto_ai 中选热度最高的
+    const headlineCategories = [CATEGORIES.LABS, CATEGORIES.MEDIA, CATEGORIES.CHINA, CATEGORIES.EMBODIED, CATEGORIES.AUTO_AI];
+    const headlineCandidates = summarizedItems
+      .filter(i => headlineCategories.includes(i.category) || i.isHot)
+      .sort((a, b) => (b.hotScore || b.score || 0) - (a.hotScore || a.score || 0));
+
+    // 取前 6 条作为头条
+    let hotItems = headlineCandidates.slice(0, 6);
+
+    // 对头条强制调用 AI 生成摘要（即使配额紧张也优先保障头条质量）
+    if (summarizer.provider && !summarizer.quotaExhausted) {
+      console.log('[Main] 为 6 条头条强制生成 AI 摘要...');
+      for (let i = 0; i < hotItems.length; i++) {
+        if (!hotItems[i].summary || hotItems[i].summary.length < 20) {
+          const result = await summarizer._callAI(hotItems[i].title, hotItems[i].content || '');
+          hotItems[i].summary = result.summary || hotItems[i].summary;
+          hotItems[i].tags = result.tags.length > 0 ? result.tags : hotItems[i].tags;
+        }
+      }
+    }
+    hotItems.forEach(i => { i.isHot = true; });
     const githubItems = summarizedItems.filter(i => i.category === CATEGORIES.GITHUB);
     const labsItems = summarizedItems.filter(i => i.category === CATEGORIES.LABS);
     const papersItems = summarizedItems.filter(i => i.category === CATEGORIES.PAPERS);
