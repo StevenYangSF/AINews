@@ -13,7 +13,8 @@ export class Summarizer {
   constructor() {
     this.openaiKey = process.env.OPENAI_API_KEY || '';
     this.geminiKey = process.env.GEMINI_API_KEY || '';
-    this.provider = null; // 'openai' | 'gemini' | null
+    this.xaiKey = process.env.XAI_API_KEY || '';
+    this.provider = null; // 'xai' | 'gemini' | 'openai' | null
     this.openaiClient = null;
     this.geminiModel = null;
     this.requestCount = 0;
@@ -21,8 +22,12 @@ export class Summarizer {
     this.quotaExhausted = false;
     this.consecutiveFailures = 0;
 
-    // 优先使用 Gemini（免费层），OpenAI 作为备选
-    if (this.geminiKey) {
+    // 优先级: xAI (免费) > Gemini (免费) > OpenAI (付费)
+    if (this.xaiKey) {
+      this.openaiClient = new OpenAI({ apiKey: this.xaiKey, baseURL: 'https://api.x.ai/v1' });
+      this.provider = 'xai';
+      console.log('[Summarizer] ✅ xAI API 已配置 (grok-3-mini-fast)');
+    } else if (this.geminiKey) {
       const genAI = new GoogleGenerativeAI(this.geminiKey);
       this.geminiModel = genAI.getGenerativeModel({ model: SUMMARIZER_CONFIG.model });
       this.provider = 'gemini';
@@ -55,23 +60,19 @@ export class Summarizer {
   }
 
   /**
-   * 构建 prompt
+   * 构建 prompt（精简版，减少 token 消耗）
    */
   _buildPrompt(title, content) {
-    return `你是一个 AI 新闻摘要助手。请根据以下标题和内容，完成两个任务：
-
-1. 用中文生成一句话核心摘要（TL;DR），不超过80字
-2. 从以下标签中选择 1-3 个最匹配的分类标签：${TAG_CATEGORIES.join('、')}
-
+    // 只取前 200 字内容，大幅减少 token 消耗
+    const shortContent = content ? content.slice(0, 200) : '';
+    return `根据标题和内容，1)用中文生成≤50字摘要 2)从[${TAG_CATEGORIES.join(',')}]选1-3个标签。
 标题：${title}
-内容：${content ? content.slice(0, 500) : '无详细内容'}
-
-请严格用以下 JSON 格式回复（不要加 markdown 标记）：
-{"summary": "一句话摘要", "tags": ["标签1", "标签2"]}`;
+内容：${shortContent}
+回复JSON：{"summary":"摘要","tags":["标签"]}`;
   }
 
   /**
-   * 调用 OpenAI API
+   * 调用 OpenAI 兼容 API（支持 OpenAI / xAI Grok）
    */
   async _callOpenAI(title, content) {
     if (!this.openaiClient || this.quotaExhausted) {
@@ -80,9 +81,11 @@ export class Summarizer {
 
     await this._rateLimit();
 
+    const model = this.provider === 'xai' ? 'grok-3-mini-fast' : 'gpt-4o-mini';
+
     try {
       const response = await this.openaiClient.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model,
         messages: [{ role: 'user', content: this._buildPrompt(title, content) }],
         temperature: 0.3,
         max_tokens: 200
@@ -104,10 +107,10 @@ export class Summarizer {
       if (this.consecutiveFailures >= 3 || error.message.includes('429') || error.message.includes('insufficient_quota')) {
         if (!this.quotaExhausted) {
           this.quotaExhausted = true;
-          console.warn(`[Summarizer] ⚠️ OpenAI API 不可用，切换降级模式: ${error.message.slice(0, 80)}`);
+          console.warn(`[Summarizer] ⚠️ ${this.provider} API 不可用，切换降级模式: ${error.message.slice(0, 80)}`);
         }
       } else {
-        console.warn(`[Summarizer] OpenAI 调用失败 (${this.consecutiveFailures}/3): ${error.message.slice(0, 100)}`);
+        console.warn(`[Summarizer] ${this.provider} 调用失败 (${this.consecutiveFailures}/3): ${error.message.slice(0, 100)}`);
       }
 
       return this._fallback(title, content);
@@ -156,7 +159,7 @@ export class Summarizer {
    * 统一 AI 调用入口
    */
   async _callAI(title, content) {
-    if (this.provider === 'openai') {
+    if (this.provider === 'xai' || this.provider === 'openai') {
       return this._callOpenAI(title, content);
     } else if (this.provider === 'gemini') {
       return this._callGemini(title, content);
@@ -200,8 +203,8 @@ export class Summarizer {
     this.lastRequestTime = Date.now();
     this.requestCount = 0;
 
-    // 只对前 50 条高优先级内容调 AI（节省配额），其余用降级
-    const AI_LIMIT = 50;
+    // 只对前 30 条高优先级内容调 AI（节省配额），其余用降级
+    const AI_LIMIT = 30;
     const results = [];
 
     for (let i = 0; i < newsItems.length; i++) {
