@@ -23,16 +23,16 @@ export class Summarizer {
     this.quotaExhausted = false;
     this.consecutiveFailures = 0;
 
-    // 优先级: Kimi > Gemini > xAI > OpenAI
-    if (this.kimiKey) {
-      this.openaiClient = new OpenAI({ apiKey: this.kimiKey, baseURL: 'https://api.moonshot.cn/v1' });
-      this.provider = 'kimi';
-      console.log('[Summarizer] ✅ Kimi API 已配置 (moonshot-v1-8k)');
-    } else if (this.geminiKey) {
+    // 优先级: Gemini (免费) > Kimi > xAI > OpenAI
+    if (this.geminiKey) {
       const genAI = new GoogleGenerativeAI(this.geminiKey);
       this.geminiModel = genAI.getGenerativeModel({ model: SUMMARIZER_CONFIG.model });
       this.provider = 'gemini';
       console.log('[Summarizer] ✅ Gemini API 已配置 (gemini-2.0-flash)');
+    } else if (this.kimiKey) {
+      this.openaiClient = new OpenAI({ apiKey: this.kimiKey, baseURL: 'https://api.moonshot.cn/v1' });
+      this.provider = 'kimi';
+      console.log('[Summarizer] ✅ Kimi API 已配置 (moonshot-v1-8k)');
     } else if (this.xaiKey) {
       this.openaiClient = new OpenAI({ apiKey: this.xaiKey, baseURL: 'https://api.x.ai/v1' });
       this.provider = 'xai';
