@@ -28,12 +28,17 @@ async function withExponentialBackoff(fn, maxRetries = 3, baseDelay = 2000) {
     try {
       return await fn();
     } catch (error) {
-      const isRetryable = error.message.includes('429') ||
-                          error.message.includes('timeout') ||
-                          error.message.includes('ETIMEDOUT') ||
-                          error.message.includes('rate') ||
-                          error.status === 429 ||
-                          error.status === 503;
+      const msg = error.message || '';
+      // 只对 429 限流和 503 过载重试；网络不通/超时/配额耗尽不重试
+      const isRetryable = (error.status === 429 || error.status === 503 ||
+                          msg.includes('429') || msg.includes('rate'));
+      
+      // 网络层失败直接抛出
+      if (msg.includes('fetch failed') || msg.includes('ECONNREFUSED') || 
+          msg.includes('ENOTFOUND') || msg.includes('insufficient_quota') ||
+          msg.includes('suspended')) {
+        throw error;
+      }
 
       if (!isRetryable || attempt === maxRetries) {
         throw error;
@@ -94,20 +99,20 @@ export class Summarizer {
     this.consecutiveFailures = 0;
     this.taskQueue = new AsyncQueue(3); // 并发 3 个 AI 调用
 
-    // 优先级: Gemini (免费) > Kimi > xAI > OpenAI
-    if (this.geminiKey) {
-      const genAI = new GoogleGenerativeAI(this.geminiKey);
-      this.geminiModel = genAI.getGenerativeModel({ model: SUMMARIZER_CONFIG.model });
-      this.provider = 'gemini';
-      console.log('[Summarizer] ✅ Gemini API 已配置 (gemini-2.0-flash)');
+    // 优先级: xAI (免费,美国IP可达) > Kimi > Gemini > OpenAI
+    if (this.xaiKey) {
+      this.openaiClient = new OpenAI({ apiKey: this.xaiKey, baseURL: 'https://api.x.ai/v1' });
+      this.provider = 'xai';
+      console.log('[Summarizer] ✅ xAI API 已配置 (grok-3-mini-fast)');
     } else if (this.kimiKey) {
       this.openaiClient = new OpenAI({ apiKey: this.kimiKey, baseURL: 'https://api.moonshot.cn/v1' });
       this.provider = 'kimi';
       console.log('[Summarizer] ✅ Kimi API 已配置 (moonshot-v1-8k)');
-    } else if (this.xaiKey) {
-      this.openaiClient = new OpenAI({ apiKey: this.xaiKey, baseURL: 'https://api.x.ai/v1' });
-      this.provider = 'xai';
-      console.log('[Summarizer] ✅ xAI API 已配置 (grok-3-mini-fast)');
+    } else if (this.geminiKey) {
+      const genAI = new GoogleGenerativeAI(this.geminiKey);
+      this.geminiModel = genAI.getGenerativeModel({ model: SUMMARIZER_CONFIG.model });
+      this.provider = 'gemini';
+      console.log('[Summarizer] ✅ Gemini API 已配置 (gemini-2.0-flash)');
     } else if (this.openaiKey) {
       this.openaiClient = new OpenAI({ apiKey: this.openaiKey });
       this.provider = 'openai';

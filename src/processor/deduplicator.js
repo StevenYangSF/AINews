@@ -113,10 +113,10 @@ function cosineSimilarity(vecA, vecB) {
 
 export class Deduplicator {
   constructor(options = {}) {
-    // 一级：SimHash 汉明距离阈值（≤ 5 位认为近似重复）
-    this.simhashThreshold = options.simhashThreshold || 5;
-    // 二级：余弦相似度阈值（≥ 0.6 认为语义重复）
-    this.semanticThreshold = options.semanticThreshold || 0.6;
+    // 一级：SimHash 汉明距离阈值（≤ 2 只去真正几乎一模一样的）
+    this.simhashThreshold = options.simhashThreshold || 2;
+    // 二级：余弦相似度阈值（≥ 0.85 只合并确实是同一事件的）
+    this.semanticThreshold = options.semanticThreshold || 0.85;
   }
 
   /**

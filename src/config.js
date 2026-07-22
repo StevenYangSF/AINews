@@ -48,24 +48,23 @@ export const GITHUB_TRENDING = {
   category: CATEGORIES.GITHUB
 };
 
-// 官方实验室（7 源）— 尽量用 RSS/RSSHub
+// 官方实验室（7 源）— RSS 优先，不存在则 HTML
 export const LABS_SOURCES = [
   { name: 'OpenAI', url: 'https://openai.com/blog/rss.xml', type: 'rss', category: CATEGORIES.LABS },
-  { name: 'Anthropic Research', url: 'https://www.anthropic.com/research/rss.xml', type: 'rss', category: CATEGORIES.LABS },
-  { name: 'Anthropic News', url: 'https://www.anthropic.com/news/rss.xml', type: 'rss', category: CATEGORIES.LABS },
+  { name: 'Anthropic', url: 'https://www.anthropic.com/news', type: 'html', category: CATEGORIES.LABS },
   { name: 'Google DeepMind', url: 'https://deepmind.google/blog/rss.xml', type: 'rss', category: CATEGORIES.LABS },
-  { name: 'Meta AI', url: 'https://ai.meta.com/blog/rss/', type: 'rss', category: CATEGORIES.LABS },
+  { name: 'Meta AI', url: 'https://ai.meta.com/blog/', type: 'html', category: CATEGORIES.LABS },
   { name: 'Microsoft Research AI', url: 'https://www.microsoft.com/en-us/research/feed/', type: 'rss', category: CATEGORIES.LABS },
   { name: 'NVIDIA Tech Blog', url: 'https://developer.nvidia.com/blog/feed/', type: 'rss', category: CATEGORIES.LABS }
 ];
 
-// 论文与代码（6 源）— 全部 RSS/API
+// 论文与代码（6 源）— RSS/API 优先
 export const PAPERS_SOURCES = [
-  { name: 'Hugging Face Papers', url: 'https://huggingface.co/papers/rss', type: 'rss', category: CATEGORIES.PAPERS },
+  { name: 'Hugging Face Papers', url: 'https://huggingface.co/papers', type: 'html', category: CATEGORIES.PAPERS },
   { name: 'arXiv cs.AI', url: 'https://rss.arxiv.org/rss/cs.AI', type: 'rss', category: CATEGORIES.PAPERS },
   { name: 'arXiv cs.LG', url: 'https://rss.arxiv.org/rss/cs.LG', type: 'rss', category: CATEGORIES.PAPERS },
   { name: 'Papers with Code', url: 'https://paperswithcode.com/', type: 'html', category: CATEGORIES.PAPERS },
-  { name: 'Stanford HAI', url: 'https://hai.stanford.edu/news/rss.xml', type: 'rss', category: CATEGORIES.PAPERS },
+  { name: 'Stanford HAI', url: 'https://hai.stanford.edu/', type: 'html', category: CATEGORIES.PAPERS },
   { name: 'Berkeley BAIR', url: 'https://bair.berkeley.edu/blog/feed.xml', type: 'rss', category: CATEGORIES.PAPERS }
 ];
 

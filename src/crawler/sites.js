@@ -33,6 +33,8 @@ function getHomepageUrl(url) {
  */
 async function crawlWithJinaReader(source) {
   const jinaApiKey = process.env.JINA_API_KEY || '';
+  if (!jinaApiKey || jinaApiKey.length < 10) return []; // 无有效 Key 直接跳过
+  
   const jinaUrl = `https://r.jina.ai/${source.url}`;
 
   try {
@@ -376,8 +378,8 @@ async function crawlSource(source) {
 
     // 如果原始 URL 抓取结果为空，智能回退（避免死链级联）
     if (items.length === 0 && source.type === 'html') {
-      // 只在有 Jina API Key 时尝试 Jina（避免无 key 时白白 403）
-      if (process.env.JINA_API_KEY) {
+      // 只在有有效 Jina API Key 时尝试 Jina
+      if (process.env.JINA_API_KEY && process.env.JINA_API_KEY.length > 10) {
         items = await crawlWithJinaReader(source);
       }
 
