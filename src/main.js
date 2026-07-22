@@ -52,15 +52,29 @@ async function main() {
     console.log('');
     console.log('[Main] === 阶段 4/4: 页面渲染 ===');
 
-    // 选取今日超级头条（6 条）：优先国内外 AI 大新闻和科技热点
-    // 从 labs/media/china/embodied/auto_ai 中选热度最高的
+    // 选取今日超级头条（6 条）：侧重 AI 大模型/Agent 发展最新消息
+    // 优先从 labs/media 中选取大模型&Agent相关，再补充其他热点
+    const aiModelKeywords = ['gpt', 'claude', 'gemini', 'llama', 'qwen', '通义', 'deepseek', 'kimi', 'grok', '大模型', 'llm', 'agent', '智能体', 'model', '模型', 'release', '发布', 'launch', 'foundation', 'frontier', 'reasoning', '推理', 'multimodal', '多模态', 'openai', 'anthropic', 'google', 'meta ai', '字节', 'mistral'];
     const headlineCategories = [CATEGORIES.LABS, CATEGORIES.MEDIA, CATEGORIES.CHINA, CATEGORIES.EMBODIED, CATEGORIES.AUTO_AI];
-    const headlineCandidates = summarizedItems
-      .filter(i => headlineCategories.includes(i.category) || i.isHot)
+
+    // 第一优先级：AI大模型/Agent相关的重磅新闻
+    const aiModelItems = summarizedItems
+      .filter(i => {
+        const text = `${i.title} ${i.content || ''} ${(i.tags || []).join(' ')}`.toLowerCase();
+        return aiModelKeywords.some(kw => text.includes(kw));
+      })
       .sort((a, b) => (b.hotScore || b.score || 0) - (a.hotScore || a.score || 0));
 
-    // 取前 6 条作为头条
-    let hotItems = headlineCandidates.slice(0, 6);
+    // 第二优先级：其他分类的热门头条
+    const otherHotItems = summarizedItems
+      .filter(i => headlineCategories.includes(i.category) && !aiModelItems.includes(i))
+      .sort((a, b) => (b.hotScore || b.score || 0) - (a.hotScore || a.score || 0));
+
+    // 取前4条AI大模型/Agent + 2条其他热点 = 6条
+    let hotItems = [
+      ...aiModelItems.slice(0, 4),
+      ...otherHotItems.slice(0, 2)
+    ].slice(0, 6);
 
     // 对头条强制调用 AI 生成摘要（即使配额紧张也优先保障头条质量）
     if (summarizer.provider && !summarizer.quotaExhausted) {
