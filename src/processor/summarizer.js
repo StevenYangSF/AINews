@@ -22,16 +22,16 @@ export class Summarizer {
     this.quotaExhausted = false;
     this.consecutiveFailures = 0;
 
-    // 优先级: xAI (免费) > Gemini (免费) > OpenAI (付费)
-    if (this.xaiKey) {
-      this.openaiClient = new OpenAI({ apiKey: this.xaiKey, baseURL: 'https://api.x.ai/v1' });
-      this.provider = 'xai';
-      console.log('[Summarizer] ✅ xAI API 已配置 (grok-3-mini-fast)');
-    } else if (this.geminiKey) {
+    // 优先级: Gemini (免费) > xAI (免费) > OpenAI (付费)
+    if (this.geminiKey) {
       const genAI = new GoogleGenerativeAI(this.geminiKey);
       this.geminiModel = genAI.getGenerativeModel({ model: SUMMARIZER_CONFIG.model });
       this.provider = 'gemini';
       console.log('[Summarizer] ✅ Gemini API 已配置 (gemini-2.0-flash)');
+    } else if (this.xaiKey) {
+      this.openaiClient = new OpenAI({ apiKey: this.xaiKey, baseURL: 'https://api.x.ai/v1' });
+      this.provider = 'xai';
+      console.log('[Summarizer] ✅ xAI API 已配置 (grok-3-mini-fast)');
     } else if (this.openaiKey) {
       this.openaiClient = new OpenAI({ apiKey: this.openaiKey });
       this.provider = 'openai';
