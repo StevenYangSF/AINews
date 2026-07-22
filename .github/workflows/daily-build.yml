@@ -43,6 +43,9 @@ jobs:
           KIMI_API_KEY: ${{ secrets.KIMI_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           JINA_API_KEY: ${{ secrets.JINA_API_KEY }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
