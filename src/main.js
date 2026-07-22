@@ -7,6 +7,7 @@ import { CrawlerScheduler } from './crawler/index.js';
 import { Deduplicator } from './processor/deduplicator.js';
 import { HotDetector } from './processor/hot-detector.js';
 import { Summarizer } from './processor/summarizer.js';
+import { filterEarlyBirdItems, generateEarlyBirdBrief } from './processor/early-bird.js';
 import { Renderer } from './renderer/index.js';
 import { getTodayDate } from './utils.js';
 import { CATEGORIES, ALL_SOURCES } from './config.js';
@@ -120,12 +121,19 @@ async function main() {
       (summarizedItems.length * 0.4) + (hotItems.length * 20) + (githubItems.length * 2) + (embodiedItems.length * 2) + (autoAiItems.length * 2)
     ));
 
+    // ===== AI早知道：筛选海外前沿 + 生成晨报 =====
+    console.log('[Main] 生成《AI早知道》前沿科技晨报...');
+    const earlyBirdItems = filterEarlyBirdItems(summarizedItems);
+    const earlyBirdMarkdown = generateEarlyBirdBrief(earlyBirdItems);
+    console.log(`[Main] 《AI早知道》: ${earlyBirdItems.length} 条前沿动态`);
+
     // 构建 DailyData
     const dailyData = {
       date: getTodayDate(),
       updatedAt: new Date().toISOString(),
       heatIndex,
       hotItems,
+      earlyBird: { items: earlyBirdItems, markdown: earlyBirdMarkdown },
       github: githubItems.slice(0, 20),
       labs: labsItems.slice(0, 15),
       papers: papersItems.slice(0, 15),
