@@ -38,6 +38,7 @@ jobs:
       - name: Run build (crawl + process + render)
         run: node src/main.js
         env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Setup Pages
