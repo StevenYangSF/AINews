@@ -273,28 +273,37 @@
         document.getElementById('hot-items').innerHTML = DATA.hotItems.map(renderHotItem).join('');
       }
 
-      // AI早知道晨报（卡片形式）
+      // AI早知道晨报（按领域分组，每个领域一张卡片）
       if (DATA.earlyBird?.items?.length > 0) {
         document.getElementById('earlybird-section').classList.remove('hidden');
         const domainIcons = { llm_agent: '🤖', embodied: '🦾', chip: '⚡', space: '🚀' };
-        const domainLabels = { llm_agent: '大模型 & Agent', embodied: '具身智能', chip: 'AI 芯片', space: '太空探索' };
-        document.getElementById('earlybird-cards').innerHTML = DATA.earlyBird.items.map(item => {
-          const icon = domainIcons[item.earlyBirdDomain] || '📡';
-          const label = domainLabels[item.earlyBirdDomain] || '前沿';
-          const url = (item.urls && item.urls[0]) || item.url || '#';
+        const domainLabels = { llm_agent: '海外大模型 & Agent', embodied: '具身智能 & 机器人', chip: '最新 AI 芯片 & 算力', space: '太空探索 & 火箭回收' };
+
+        // 按领域分组
+        const grouped = {};
+        DATA.earlyBird.items.forEach(item => {
+          const d = item.earlyBirdDomain || 'llm_agent';
+          if (!grouped[d]) grouped[d] = [];
+          grouped[d].push(item);
+        });
+
+        // 每个领域渲染一张卡片
+        document.getElementById('earlybird-cards').innerHTML = Object.entries(grouped).map(([domain, items]) => {
+          const icon = domainIcons[domain] || '📡';
+          const label = domainLabels[domain] || '前沿';
+          const listHtml = items.map(item => {
+            const url = (item.urls && item.urls[0]) || item.url || '#';
+            return `<li class="mb-2"><a href="${url}" target="_blank" rel="noopener" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><strong class="text-[13px]">${item.title}</strong></a><p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">${item.summary || ''}</p></li>`;
+          }).join('');
+
           return `
-            <a href="${url}" target="_blank" rel="noopener" class="card block bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl p-5 border border-blue-100 dark:border-blue-800/30 hover:border-blue-300 dark:hover:border-blue-600 transition-all">
-              <div class="flex items-center gap-2 mb-2">
-                <span>${icon}</span>
-                <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">${label}</span>
+            <div class="bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl p-5 border border-blue-100 dark:border-blue-800/30">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-lg">${icon}</span>
+                <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">${label}</span>
               </div>
-              <h3 class="font-bold text-[14px] leading-snug mb-2">${item.title}</h3>
-              <p class="text-[12px] text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3">${item.summary || ''}</p>
-              <div class="mt-3 flex items-center justify-between">
-                <span class="text-[10px] text-gray-400">${(item.sources || [])[0] || ''}</span>
-                <span class="text-[10px] text-blue-500">🔗 查看原文</span>
-              </div>
-            </a>
+              <ul class="list-none p-0 m-0">${listHtml}</ul>
+            </div>
           `;
         }).join('');
       }
