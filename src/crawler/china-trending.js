@@ -136,18 +136,79 @@ async function crawlWeibo() {
 }
 
 /**
+ * 抓取百度热搜榜中的 AI/科技相关话题
+ */
+async function crawlBaidu() {
+  console.log('[China] 抓取百度热搜...');
+
+  // 百度热搜 API
+  const data = await safeFetchJSON('https://top.baidu.com/api/board?platform=wise&tab=realtime');
+  if (data && data.data && data.data.cards && data.data.cards[0]) {
+    const items = data.data.cards[0].content
+      .filter(item => {
+        const text = `${item.word || ''} ${item.desc || ''}`;
+        return AI_KEYWORDS.some(kw => text.toLowerCase().includes(kw.toLowerCase()));
+      })
+      .map(item => ({
+        title: item.word || '',
+        url: item.url || `https://www.baidu.com/s?wd=${encodeURIComponent(item.word || '')}`,
+        source: '百度热搜',
+        category: CATEGORIES.CHINA,
+        publishedAt: new Date().toISOString(),
+        content: item.desc || '',
+        metadata: { score: item.hotScore || 0 }
+      }))
+      .slice(0, 10);
+
+    console.log(`[China] 百度热搜: ${items.length} 条 AI 相关`);
+    return items;
+  }
+
+  // 备用：抓取百度热搜页面
+  const html = await safeFetchText('https://top.baidu.com/board?tab=realtime');
+  if (!html) return [];
+
+  const $ = cheerio.load(html);
+  const items = [];
+
+  $('a[href*="baidu.com/s"],.category-wrap_iQLoo a').each((_, el) => {
+    const $a = $(el);
+    const title = $a.text().trim();
+    const href = $a.attr('href') || '';
+
+    if (!title || title.length < 4) return;
+    if (!AI_KEYWORDS.some(kw => title.toLowerCase().includes(kw.toLowerCase()))) return;
+    if (items.some(i => i.title === title)) return;
+
+    items.push({
+      title,
+      url: href.startsWith('http') ? href : `https://www.baidu.com/s?wd=${encodeURIComponent(title)}`,
+      source: '百度热搜',
+      category: CATEGORIES.CHINA,
+      publishedAt: new Date().toISOString(),
+      content: '',
+      metadata: { score: 0 }
+    });
+  });
+
+  console.log(`[China] 百度热搜: ${items.length} 条 AI 相关`);
+  return items.slice(0, 10);
+}
+
+/**
  * 抓取所有国内热搜
  * @returns {Promise<Array>} RawItem 数组
  */
 export async function crawlChinaTrending() {
   console.log('[Crawler] 开始抓取国内科技热搜...');
 
-  const [zhihu, weibo] = await Promise.all([
+  const [zhihu, weibo, baidu] = await Promise.all([
     crawlZhihu().catch(() => []),
-    crawlWeibo().catch(() => [])
+    crawlWeibo().catch(() => []),
+    crawlBaidu().catch(() => [])
   ]);
 
-  const results = [...zhihu, ...weibo];
+  const results = [...zhihu, ...weibo, ...baidu];
   console.log(`[Crawler] 国内热搜: 共获取 ${results.length} 条`);
   return results;
 }

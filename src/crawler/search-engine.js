@@ -162,19 +162,73 @@ async function searchDuckDuckGo(query, category) {
 }
 
 /**
+ * 通过百度资讯搜索（baidu.com/s?rtt=1 资讯模式）
+ */
+async function searchBaiduNews(query, category) {
+  const encodedQuery = encodeURIComponent(query);
+  const url = `https://www.baidu.com/s?wd=${encodedQuery}&rtt=1&bsst=1&cl=2&tn=news`;
+
+  const html = await safeFetchText(url);
+  if (!html) return [];
+
+  const $ = cheerio.load(html);
+  const items = [];
+
+  // 百度资讯搜索结果
+  $('.result-op, .result').each((_, el) => {
+    const $el = $(el);
+    const $link = $el.find('a').first();
+    const title = $link.text().trim() || $el.find('h3 a').text().trim();
+    let href = $link.attr('href') || $el.find('h3 a').attr('href') || '';
+
+    if (!title || title.length < 5) return;
+    if (!href.startsWith('http')) return;
+
+    const snippet = $el.find('.c-abstract, .c-summary, .c-span-last').text().trim();
+
+    if (items.some(i => i.title === title)) return;
+
+    items.push({
+      title,
+      url: href,
+      source: '🔍 百度资讯',
+      category,
+      publishedAt: new Date().toISOString(),
+      content: snippet.slice(0, 200),
+      metadata: { searchQuery: query }
+    });
+  });
+
+  return items.slice(0, 5);
+}
+
+/**
  * 执行单个关键词的多引擎搜索
  */
 async function searchKeyword(query, category) {
   const results = [];
 
-  // 优先 Google News RSS（最稳定）
-  const googleResults = await searchGoogleNews(query, category);
-  results.push(...googleResults);
+  // 中文查询优先百度，英文查询优先 Google
+  const isChinese = /[\u4e00-\u9fff]/.test(query);
 
-  // 如果 Google 返回太少，补充 Bing
-  if (results.length < 3) {
-    const bingResults = await searchBingNews(query, category);
-    results.push(...bingResults);
+  if (isChinese) {
+    // 中文关键词：百度优先
+    const baiduResults = await searchBaiduNews(query, category);
+    results.push(...baiduResults);
+
+    if (results.length < 3) {
+      const bingResults = await searchBingNews(query, category);
+      results.push(...bingResults);
+    }
+  } else {
+    // 英文关键词：Google 优先
+    const googleResults = await searchGoogleNews(query, category);
+    results.push(...googleResults);
+
+    if (results.length < 3) {
+      const bingResults = await searchBingNews(query, category);
+      results.push(...bingResults);
+    }
   }
 
   return results;
