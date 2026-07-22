@@ -7,6 +7,7 @@ import { crawlGitHubTrending } from './github-trending.js';
 import { crawlSites } from './sites.js';
 import { crawlCommunities } from './communities.js';
 import { crawlChinaTrending } from './china-trending.js';
+import { crawlSearchEngines } from './search-engine.js';
 
 /**
  * CrawlerScheduler - 爬虫调度器
@@ -29,12 +30,13 @@ export class CrawlerScheduler {
 
     const startTime = Date.now();
 
-    // 四大板块并发执行
+    // 五大板块并发执行
     const tasks = [
       { name: 'GitHub Trending', fn: crawlGitHubTrending },
-      { name: '25 精选站点', fn: crawlSites },
+      { name: '精选站点', fn: crawlSites },
       { name: '全球技术社区', fn: crawlCommunities },
-      { name: '国内科技热搜', fn: crawlChinaTrending }
+      { name: '国内科技热搜', fn: crawlChinaTrending },
+      { name: '搜索引擎关键词', fn: crawlSearchEngines }
     ];
 
     const taskResults = await Promise.allSettled(
