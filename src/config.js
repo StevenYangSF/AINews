@@ -135,7 +135,9 @@ export const AUTO_AI_SOURCES = [
   { name: '智加科技 Plus', url: 'https://plusai.com/news/', type: 'html', category: CATEGORIES.AUTO_AI },
   // === 中国量产智驾：芯片+算法生态 ===
   { name: '华为乾崑智驾', url: 'https://auto.huawei.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '华为ADS智驾', url: 'https://auto.huawei.com/cn/ads/', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: 'Momenta', url: 'https://www.momenta.ai/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: 'Momenta中文站', url: 'https://www.momenta.cn/', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: '地平线 Horizon', url: 'https://www.horizon.auto/', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: '卓驭科技(大疆车载)', url: 'https://www.dji.com/cn/auto', type: 'html', category: CATEGORIES.AUTO_AI },
   // === 中国造车新势力（智驾动态） ===
@@ -145,6 +147,14 @@ export const AUTO_AI_SOURCES = [
   { name: '比亚迪智驾', url: 'https://www.byd.com/cn/news.html', type: 'html', category: CATEGORIES.AUTO_AI },
   // === 垂直汽车科技媒体 ===
   { name: '盖世汽车', url: 'https://auto.gasgoo.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '盖世汽车中文站', url: 'https://cn.gasgoo.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  // === 中文论坛与社区 ===
+  { name: '知乎自动驾驶话题', url: 'https://www.zhihu.com/topic/19630454/hot', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: 'CSDN自动驾驶专区', url: 'https://bbs.csdn.net/forums/Autonomous', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: 'Apollo开发者社区', url: 'https://developer.apollo.auto/community', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '汽车之心', url: 'https://www.autobit.xyz/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '高工智能汽车研究院', url: 'https://www.gg-ai.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '深蓝学院自动驾驶', url: 'https://bbs.deepshare.net/c/ai/car', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: '九章智驾', url: 'https://www.ninethtech.com/', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: '车东西', url: 'https://chedongxi.com/', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: '高工智能汽车', url: 'https://www.gg-auto.com/', type: 'html', category: CATEGORIES.AUTO_AI },
