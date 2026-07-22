@@ -119,7 +119,7 @@ export class Summarizer {
     if (fullText.match(/自动驾驶|autonomous.?driv|fsd|waymo|智驾|端到端|sdv|智能汽车|tesla.*ai/)) tags.push('自动驾驶');
     if (fullText.match(/agent|智能体|crewai|autogen|multi.?agent/)) tags.push('智能体');
     if (fullText.match(/安全|safety|alignment|jailbreak|红队/)) tags.push('AI 安全');
-    if (fullText.match(/test|testing|自动化测试|playwright|selenium|cypress|robot.?framework|appium|qa|质量/)) tags.push('AI测试');
+    if (fullText.match(/test|testing|自动化测试|playwright|selenium|cypress|robot.?framework|appium|qa|质量|sikulix|airtest|ocr|tesseract|visual.?test|self.?heal|mutation.?test|property.?based|hypothesis|schemathesis/)) tags.push('AI测试');
 
     if (tags.length === 0) tags.push('行业商业'); // 默认标签
 

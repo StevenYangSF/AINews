@@ -11,8 +11,12 @@ export const AI_KEYWORDS = [
   'multimodal', 'computer vision', 'nlp', 'reinforcement learning',
   'robotics', 'embodied', 'humanoid', 'autonomous driving', 'self-driving',
   'vla', 'manipulation', 'fsd', 'waymo',
+  'test automation', 'playwright', 'selenium', 'cypress', 'appium',
+  'robot framework', 'self-healing', 'visual testing', 'ocr', 'opencv',
+  'property-based', 'mutation testing', 'sikulix', 'hypothesis',
   '人工智能', '大模型', '机器学习', '深度学习', '神经网络', '智能体',
-  '具身智能', '人形机器人', '自动驾驶', '智能驾驶', '端到端'
+  '具身智能', '人形机器人', '自动驾驶', '智能驾驶', '端到端',
+  '自动化测试', '智能测试', '视觉测试', '自愈定位'
 ];
 
 // 自动标签分类（扩展到 12 个）
@@ -138,19 +142,39 @@ export const AUTO_AI_SOURCES = [
 
 // ===== 新增板块：AI 自动化测试 =====
 export const TESTING_SOURCES = [
-  // GitHub 开源测试框架（通过 GitHub search API）
+  // AI & ML 测试分析平台
+  { name: 'ReportPortal', url: 'https://reportportal.io/', type: 'html', category: CATEGORIES.TESTING },
+  // 计算机视觉 & 图像识别测试
+  { name: 'GitHub SikuliX', url: 'https://github.com/RaiMan/SikuliX1', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub Airtest', url: 'https://github.com/AirtestProject/Airtest', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub Needle', url: 'https://github.com/python-needle/needle', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub image-comparison', url: 'https://github.com/romankh3/image-comparison', type: 'html', category: CATEGORIES.TESTING },
+  // 智能定位 & 自愈
+  { name: 'TrueAutomation.IO', url: 'https://trueautomation.io/', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub TestZeus', url: 'https://github.com/test-zeus-ai/testzeus-hercules', type: 'html', category: CATEGORIES.TESTING },
+  // 智能生成 & 属性测试
+  { name: 'GitHub Hypothesis', url: 'https://github.com/HypothesisWorks/hypothesis', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub Schemathesis', url: 'https://github.com/schemathesis/schemathesis', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub PIT Mutation', url: 'https://github.com/hcoles/pitest', type: 'html', category: CATEGORIES.TESTING },
+  // 核心自动化框架
   { name: 'GitHub Playwright', url: 'https://github.com/microsoft/playwright', type: 'html', category: CATEGORIES.TESTING },
   { name: 'GitHub Selenium', url: 'https://github.com/SeleniumHQ/selenium', type: 'html', category: CATEGORIES.TESTING },
   { name: 'GitHub Robot Framework', url: 'https://github.com/robotframework/robotframework', type: 'html', category: CATEGORIES.TESTING },
   { name: 'GitHub Cypress', url: 'https://github.com/cypress-io/cypress', type: 'html', category: CATEGORIES.TESTING },
   { name: 'GitHub Appium', url: 'https://github.com/appium/appium', type: 'html', category: CATEGORIES.TESTING },
-  // AI 测试工具 & 框架
-  { name: 'GitHub AI Testing Tools', url: 'https://github.com/topics/ai-testing', type: 'html', category: CATEGORIES.TESTING },
+  // DeepfakeHTTP (AI mock 服务器)
+  { name: 'GitHub DeepfakeHTTP', url: 'https://github.com/nicholasgasior/deepfake-http', type: 'html', category: CATEGORIES.TESTING },
+  // GitHub Topics
+  { name: 'GitHub AI Testing', url: 'https://github.com/topics/ai-testing', type: 'html', category: CATEGORIES.TESTING },
   { name: 'GitHub Test Automation', url: 'https://github.com/topics/test-automation', type: 'html', category: CATEGORIES.TESTING },
   { name: 'GitHub API Testing', url: 'https://github.com/topics/api-testing', type: 'html', category: CATEGORIES.TESTING },
-  // 测试社区 & 资讯
-  { name: 'Hacker News QA/Testing', url: 'https://hn.algolia.com/api/v1/search?tags=story&query=test+automation+AI+playwright+selenium', type: 'api', category: CATEGORIES.TESTING },
-  { name: 'Reddit r/QualityAssurance', url: 'https://www.reddit.com/r/QualityAssurance/hot.json?limit=10', type: 'api', category: CATEGORIES.TESTING }
+  { name: 'GitHub Visual Testing', url: 'https://github.com/topics/visual-testing', type: 'html', category: CATEGORIES.TESTING },
+  // 社区资讯
+  { name: 'HN Test Automation', url: 'https://hn.algolia.com/api/v1/search?tags=story&query=test+automation+AI+playwright+selenium+self-healing', type: 'api', category: CATEGORIES.TESTING },
+  { name: 'Reddit r/QualityAssurance', url: 'https://www.reddit.com/r/QualityAssurance/hot.json?limit=10', type: 'api', category: CATEGORIES.TESTING },
+  // Awesome 列表
+  { name: 'Awesome Test Automation Java', url: 'https://github.com/atinfo/awesome-test-automation/blob/master/java-test-automation.md', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'Awesome Test Automation Python', url: 'https://github.com/atinfo/awesome-test-automation/blob/master/python-test-automation.md', type: 'html', category: CATEGORIES.TESTING }
 ];
 
 // 全球社区
