@@ -14,7 +14,8 @@ export class Summarizer {
     this.openaiKey = process.env.OPENAI_API_KEY || '';
     this.geminiKey = process.env.GEMINI_API_KEY || '';
     this.xaiKey = process.env.XAI_API_KEY || '';
-    this.provider = null; // 'xai' | 'gemini' | 'openai' | null
+    this.kimiKey = process.env.KIMI_API_KEY || '';
+    this.provider = null; // 'kimi' | 'gemini' | 'xai' | 'openai' | null
     this.openaiClient = null;
     this.geminiModel = null;
     this.requestCount = 0;
@@ -22,8 +23,12 @@ export class Summarizer {
     this.quotaExhausted = false;
     this.consecutiveFailures = 0;
 
-    // 优先级: Gemini (免费) > xAI (免费) > OpenAI (付费)
-    if (this.geminiKey) {
+    // 优先级: Kimi > Gemini > xAI > OpenAI
+    if (this.kimiKey) {
+      this.openaiClient = new OpenAI({ apiKey: this.kimiKey, baseURL: 'https://api.moonshot.cn/v1' });
+      this.provider = 'kimi';
+      console.log('[Summarizer] ✅ Kimi API 已配置 (moonshot-v1-8k)');
+    } else if (this.geminiKey) {
       const genAI = new GoogleGenerativeAI(this.geminiKey);
       this.geminiModel = genAI.getGenerativeModel({ model: SUMMARIZER_CONFIG.model });
       this.provider = 'gemini';
@@ -81,7 +86,7 @@ export class Summarizer {
 
     await this._rateLimit();
 
-    const model = this.provider === 'xai' ? 'grok-3-mini-fast' : 'gpt-4o-mini';
+    const model = this.provider === 'xai' ? 'grok-3-mini-fast' : this.provider === 'kimi' ? 'moonshot-v1-8k' : 'gpt-4o-mini';
 
     try {
       const response = await this.openaiClient.chat.completions.create({
@@ -159,7 +164,7 @@ export class Summarizer {
    * 统一 AI 调用入口
    */
   async _callAI(title, content) {
-    if (this.provider === 'xai' || this.provider === 'openai') {
+    if (this.provider === 'kimi' || this.provider === 'xai' || this.provider === 'openai') {
       return this._callOpenAI(title, content);
     } else if (this.provider === 'gemini') {
       return this._callGemini(title, content);
