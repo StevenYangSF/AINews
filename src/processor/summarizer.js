@@ -21,16 +21,16 @@ export class Summarizer {
     this.quotaExhausted = false;
     this.consecutiveFailures = 0;
 
-    // 优先使用 OpenAI
-    if (this.openaiKey) {
-      this.openaiClient = new OpenAI({ apiKey: this.openaiKey });
-      this.provider = 'openai';
-      console.log('[Summarizer] ✅ OpenAI API 已配置 (gpt-4o-mini)');
-    } else if (this.geminiKey) {
+    // 优先使用 Gemini（免费层），OpenAI 作为备选
+    if (this.geminiKey) {
       const genAI = new GoogleGenerativeAI(this.geminiKey);
       this.geminiModel = genAI.getGenerativeModel({ model: SUMMARIZER_CONFIG.model });
       this.provider = 'gemini';
-      console.log('[Summarizer] ✅ Gemini API 已配置');
+      console.log('[Summarizer] ✅ Gemini API 已配置 (gemini-2.0-flash)');
+    } else if (this.openaiKey) {
+      this.openaiClient = new OpenAI({ apiKey: this.openaiKey });
+      this.provider = 'openai';
+      console.log('[Summarizer] ✅ OpenAI API 已配置 (gpt-4o-mini)');
     } else {
       console.warn('[Summarizer] ⚠️ 未配置任何 AI API Key，将使用截断文本作为摘要');
     }
@@ -200,13 +200,16 @@ export class Summarizer {
     this.lastRequestTime = Date.now();
     this.requestCount = 0;
 
+    // 只对前 50 条高优先级内容调 AI（节省配额），其余用降级
+    const AI_LIMIT = 50;
     const results = [];
 
-    for (const item of newsItems) {
+    for (let i = 0; i < newsItems.length; i++) {
+      const item = newsItems[i];
       const contentLength = (item.content || '').length + (item.title || '').length;
 
       let summaryData;
-      if (contentLength < SUMMARIZER_CONFIG.contentThreshold || !this.provider || this.quotaExhausted) {
+      if (i >= AI_LIMIT || contentLength < SUMMARIZER_CONFIG.contentThreshold || !this.provider || this.quotaExhausted) {
         summaryData = this._fallback(item.title, item.content);
       } else {
         summaryData = await this._callAI(item.title, item.content);
@@ -219,7 +222,8 @@ export class Summarizer {
       });
     }
 
-    console.log(`[Summarizer] 摘要生成完成: ${results.length} 条`);
+    const aiCount = Math.min(AI_LIMIT, newsItems.length) - (this.quotaExhausted ? this.consecutiveFailures : 0);
+    console.log(`[Summarizer] 摘要生成完成: ${results.length} 条 (AI摘要: ~${Math.max(0, aiCount)} 条)`);
     return results;
   }
 }
