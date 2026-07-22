@@ -99,8 +99,13 @@ export class Summarizer {
     this.consecutiveFailures = 0;
     this.taskQueue = new AsyncQueue(3); // 并发 3 个 AI 调用
 
-    // 优先级: xAI (免费,美国IP可达) > Kimi > Gemini > OpenAI
-    if (this.xaiKey) {
+    // 优先级: Gemini (免费) > xAI (免费) > Kimi > OpenAI
+    if (this.geminiKey) {
+      const genAI = new GoogleGenerativeAI(this.geminiKey);
+      this.geminiModel = genAI.getGenerativeModel({ model: SUMMARIZER_CONFIG.model });
+      this.provider = 'gemini';
+      console.log('[Summarizer] ✅ Gemini API 已配置 (gemini-2.0-flash)');
+    } else if (this.xaiKey) {
       this.openaiClient = new OpenAI({ apiKey: this.xaiKey, baseURL: 'https://api.x.ai/v1' });
       this.provider = 'xai';
       console.log('[Summarizer] ✅ xAI API 已配置 (grok-3-mini-fast)');
@@ -108,11 +113,6 @@ export class Summarizer {
       this.openaiClient = new OpenAI({ apiKey: this.kimiKey, baseURL: 'https://api.moonshot.cn/v1' });
       this.provider = 'kimi';
       console.log('[Summarizer] ✅ Kimi API 已配置 (moonshot-v1-8k)');
-    } else if (this.geminiKey) {
-      const genAI = new GoogleGenerativeAI(this.geminiKey);
-      this.geminiModel = genAI.getGenerativeModel({ model: SUMMARIZER_CONFIG.model });
-      this.provider = 'gemini';
-      console.log('[Summarizer] ✅ Gemini API 已配置 (gemini-2.0-flash)');
     } else if (this.openaiKey) {
       this.openaiClient = new OpenAI({ apiKey: this.openaiKey });
       this.provider = 'openai';
