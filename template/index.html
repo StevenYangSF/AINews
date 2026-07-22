@@ -76,7 +76,8 @@
       <button class="tab-btn tab-active px-4 py-2 rounded-full text-xs font-semibold transition-all" data-tab="github">🚀 GitHub</button>
       <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="embodied">🤖 具身智能</button>
       <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="autoAi">🚗 汽车AI</button>
-      <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="labs">🧪 实验室</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="testing">🧪 AI测试</button>
+      <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="labs">🔬 实验室</button>
       <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="media">📰 行业资讯</button>
       <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="weekly">📋 深度周报</button>
       <button class="tab-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-200/60 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 transition-all" data-tab="papers">📄 论文</button>
@@ -103,6 +104,9 @@
         <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="Tesla">Tesla</button>
         <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="华为">华为</button>
         <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="OpenAI">OpenAI</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="Playwright">Playwright</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="Selenium">Selenium</button>
+        <button class="kw-pill px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-900/30 dark:hover:text-blue-300 transition-all" data-kw="测试">测试</button>
       </div>
     </section>
 
@@ -110,6 +114,7 @@
     <div id="tab-github" class="tab-content"><div id="github-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
     <div id="tab-embodied" class="tab-content hidden"><div id="embodied-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
     <div id="tab-autoAi" class="tab-content hidden"><div id="autoAi-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
+    <div id="tab-testing" class="tab-content hidden"><div id="testing-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
     <div id="tab-labs" class="tab-content hidden"><div id="labs-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
     <div id="tab-media" class="tab-content hidden"><div id="media-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div></div>
     <div id="tab-weekly" class="tab-content hidden"><div id="weekly-list" class="grid gap-4 grid-cols-1 sm:grid-cols-2"></div></div>
@@ -244,6 +249,7 @@
         'github-list': { data: DATA.github, render: renderCard },
         'embodied-list': { data: DATA.embodied, render: renderCard },
         'autoAi-list': { data: DATA.autoAi, render: renderCard },
+        'testing-list': { data: DATA.testing, render: renderCard },
         'labs-list': { data: DATA.labs, render: renderCard },
         'media-list': { data: DATA.media, render: renderCard },
         'weekly-list': { data: DATA.weekly, render: renderWeeklyCard },

@@ -19,17 +19,19 @@ export const AI_KEYWORDS = [
 export const TAG_CATEGORIES = [
   '模型发布', '开源工具', 'AI Infra', '行业商业', '论文解读',
   'AI 安全', '智能体', '产品应用',
-  '具身智能', '人形机器人', '自动驾驶', '端到端智驾'
+  '具身智能', '人形机器人', '自动驾驶', '端到端智驾',
+  'AI测试', '自动化测试'
 ];
 
-// 数据源分类（9 个 Tab）
+// 数据源分类（10 个 Tab）
 export const CATEGORIES = {
   GITHUB: 'github',
   LABS: 'labs',
   PAPERS: 'papers',
   MEDIA: 'media',
-  EMBODIED: 'embodied',    // 新增：具身智能
-  AUTO_AI: 'auto_ai',      // 新增：汽车AI
+  EMBODIED: 'embodied',
+  AUTO_AI: 'auto_ai',
+  TESTING: 'testing',      // 新增：AI自动化测试
   WEEKLY: 'weekly',
   COMMUNITY: 'community',
   CHINA: 'china'
@@ -76,12 +78,13 @@ export const MEDIA_SOURCES = [
   { name: 'The Information', url: 'https://www.theinformation.com/', type: 'html', category: CATEGORIES.MEDIA }
 ];
 
-// Hex2077 专属源
+// Hex2077 专属源 + 深度周报
 export const HEX2077_SOURCES = [
   { name: 'Hex2077 日报', url: 'https://hex2077.dev/docs/', type: 'custom-hex2077-docs', category: CATEGORIES.MEDIA },
   { name: 'Hex2077 周报', url: 'https://hex2077.dev/blog/?category=weekly', type: 'custom-hex2077-weekly', category: CATEGORIES.WEEKLY },
   { name: 'Hex2077 博客', url: 'https://hex2077.dev/blog/', type: 'custom-hex2077-blog', category: CATEGORIES.MEDIA },
-  { name: 'Hex2077 导航', url: 'https://nav.hex2077.dev/', type: 'custom-hex2077-nav', category: CATEGORIES.COMMUNITY }
+  { name: 'Hex2077 导航', url: 'https://nav.hex2077.dev/', type: 'custom-hex2077-nav', category: CATEGORIES.COMMUNITY },
+  { name: 'AI Hot Daily', url: 'https://aihot.virxact.com/daily', type: 'html', category: CATEGORIES.WEEKLY }
 ];
 
 // ===== 新增板块：具身智能（Embodied AI & 人形机器人）=====
@@ -133,6 +136,23 @@ export const AUTO_AI_SOURCES = [
   { name: 'TechCrunch Mobility', url: 'https://techcrunch.com/category/transportation/feed/', type: 'rss', category: CATEGORIES.AUTO_AI }
 ];
 
+// ===== 新增板块：AI 自动化测试 =====
+export const TESTING_SOURCES = [
+  // GitHub 开源测试框架（通过 GitHub search API）
+  { name: 'GitHub Playwright', url: 'https://github.com/microsoft/playwright', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub Selenium', url: 'https://github.com/SeleniumHQ/selenium', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub Robot Framework', url: 'https://github.com/robotframework/robotframework', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub Cypress', url: 'https://github.com/cypress-io/cypress', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub Appium', url: 'https://github.com/appium/appium', type: 'html', category: CATEGORIES.TESTING },
+  // AI 测试工具 & 框架
+  { name: 'GitHub AI Testing Tools', url: 'https://github.com/topics/ai-testing', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub Test Automation', url: 'https://github.com/topics/test-automation', type: 'html', category: CATEGORIES.TESTING },
+  { name: 'GitHub API Testing', url: 'https://github.com/topics/api-testing', type: 'html', category: CATEGORIES.TESTING },
+  // 测试社区 & 资讯
+  { name: 'Hacker News QA/Testing', url: 'https://hn.algolia.com/api/v1/search?tags=story&query=test+automation+AI+playwright+selenium', type: 'api', category: CATEGORIES.TESTING },
+  { name: 'Reddit r/QualityAssurance', url: 'https://www.reddit.com/r/QualityAssurance/hot.json?limit=10', type: 'api', category: CATEGORIES.TESTING }
+];
+
 // 全球社区
 export const COMMUNITY_SOURCES = [
   { name: 'Hacker News', url: 'https://hn.algolia.com/api/v1/search?tags=story&query=AI+LLM+GPT+Agent+Robotics+VLA', type: 'api', category: CATEGORIES.COMMUNITY },
@@ -166,6 +186,7 @@ export const ALL_SOURCES = [
   ...HEX2077_SOURCES,
   ...EMBODIED_SOURCES,
   ...AUTO_AI_SOURCES,
+  ...TESTING_SOURCES,
   ...COMMUNITY_SOURCES,
   ...CHINA_SOURCES,
   ...CHINA_TRENDING_SOURCES

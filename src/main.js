@@ -52,7 +52,7 @@ async function main() {
     console.log('');
     console.log('[Main] === 阶段 4/4: 页面渲染 ===');
 
-    // 分类整理（9 大板块）
+    // 分类整理（10 大板块）
     const hotItems = summarizedItems.filter(i => i.isHot).slice(0, 3);
     const githubItems = summarizedItems.filter(i => i.category === CATEGORIES.GITHUB);
     const labsItems = summarizedItems.filter(i => i.category === CATEGORIES.LABS);
@@ -60,6 +60,7 @@ async function main() {
     const mediaItems = summarizedItems.filter(i => i.category === CATEGORIES.MEDIA);
     const embodiedItems = summarizedItems.filter(i => i.category === CATEGORIES.EMBODIED);
     const autoAiItems = summarizedItems.filter(i => i.category === CATEGORIES.AUTO_AI);
+    const testingItems = summarizedItems.filter(i => i.category === CATEGORIES.TESTING);
     const weeklyItems = summarizedItems.filter(i => i.category === CATEGORIES.WEEKLY);
     const communityItems = summarizedItems.filter(i => i.category === CATEGORIES.COMMUNITY);
     const chinaItems = summarizedItems.filter(i => i.category === CATEGORIES.CHINA);
@@ -81,6 +82,7 @@ async function main() {
       media: mediaItems.slice(0, 30),
       embodied: embodiedItems.slice(0, 15),
       autoAi: autoAiItems.slice(0, 15),
+      testing: testingItems.slice(0, 15),
       weekly: weeklyItems.slice(0, 10),
       community: communityItems.slice(0, 20),
       china: chinaItems.slice(0, 15),
