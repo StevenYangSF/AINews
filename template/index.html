@@ -80,7 +80,7 @@
           <h2 class="text-sm font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">AI早知道 | 前沿科技晨报</h2>
           <span class="text-[11px] text-gray-400 ml-auto">海外硬核 AI · 具身智能 · 芯片 · 太空</span>
         </div>
-        <div id="earlybird-content" class="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-relaxed"></div>
+        <div id="earlybird-cards" class="grid gap-4 grid-cols-1 md:grid-cols-2"></div>
       </div>
     </section>
 
@@ -273,19 +273,30 @@
         document.getElementById('hot-items').innerHTML = DATA.hotItems.map(renderHotItem).join('');
       }
 
-      // AI早知道晨报
-      if (DATA.earlyBird?.markdown) {
+      // AI早知道晨报（卡片形式）
+      if (DATA.earlyBird?.items?.length > 0) {
         document.getElementById('earlybird-section').classList.remove('hidden');
-        // 简单 Markdown → HTML 转换
-        const md = DATA.earlyBird.markdown
-          .replace(/^## (.+)$/gm, '<h3 class="text-base font-bold mb-3 text-blue-600 dark:text-blue-400">$1</h3>')
-          .replace(/^### (.+)$/gm, '<h4 class="text-sm font-bold mt-4 mb-2">$1</h4>')
-          .replace(/^\* \*\*(.+?)\*\*：(.+?) \[🔗 源链接\]\((.+?)\)$/gm, '<div class="flex items-start gap-2 mb-2 pl-2 border-l-2 border-blue-200 dark:border-blue-800"><span class="font-semibold text-[13px]">$1</span><span class="text-gray-500 dark:text-gray-400 text-[12px] flex-1">$2</span><a href="$3" target="_blank" class="text-blue-500 text-[11px] whitespace-nowrap">🔗</a></div>')
-          .replace(/^\* \*\*(.+?)\*\*：(.+)$/gm, '<div class="flex items-start gap-2 mb-2 pl-2 border-l-2 border-blue-200 dark:border-blue-800"><span class="font-semibold text-[13px]">$1</span><span class="text-gray-500 dark:text-gray-400 text-[12px]">$2</span></div>')
-          .replace(/^---$/gm, '<hr class="my-3 border-gray-200 dark:border-gray-700">')
-          .replace(/^\*(.+)\*$/gm, '<p class="text-[11px] text-gray-400 italic">$1</p>')
-          .replace(/\n/g, '');
-        document.getElementById('earlybird-content').innerHTML = md;
+        const domainIcons = { llm_agent: '🤖', embodied: '🦾', chip: '⚡', space: '🚀' };
+        const domainLabels = { llm_agent: '大模型 & Agent', embodied: '具身智能', chip: 'AI 芯片', space: '太空探索' };
+        document.getElementById('earlybird-cards').innerHTML = DATA.earlyBird.items.map(item => {
+          const icon = domainIcons[item.earlyBirdDomain] || '📡';
+          const label = domainLabels[item.earlyBirdDomain] || '前沿';
+          const url = (item.urls && item.urls[0]) || item.url || '#';
+          return `
+            <a href="${url}" target="_blank" rel="noopener" class="card block bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl p-5 border border-blue-100 dark:border-blue-800/30 hover:border-blue-300 dark:hover:border-blue-600 transition-all">
+              <div class="flex items-center gap-2 mb-2">
+                <span>${icon}</span>
+                <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">${label}</span>
+              </div>
+              <h3 class="font-bold text-[14px] leading-snug mb-2">${item.title}</h3>
+              <p class="text-[12px] text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3">${item.summary || ''}</p>
+              <div class="mt-3 flex items-center justify-between">
+                <span class="text-[10px] text-gray-400">${(item.sources || [])[0] || ''}</span>
+                <span class="text-[10px] text-blue-500">🔗 查看原文</span>
+              </div>
+            </a>
+          `;
+        }).join('');
       }
 
       const sections = {

@@ -122,9 +122,22 @@ async function main() {
       (summarizedItems.length * 0.4) + (hotItems.length * 20) + (githubItems.length * 2) + (embodiedItems.length * 2) + (autoAiItems.length * 2)
     ));
 
-    // ===== AI早知道：筛选海外前沿 + 生成晨报 =====
+    // ===== AI早知道：筛选海外前沿 + AI 摘要 + 生成晨报 =====
     console.log('[Main] 生成《AI早知道》前沿科技晨报...');
     const earlyBirdItems = filterEarlyBirdItems(summarizedItems);
+
+    // 对《AI早知道》条目优先调用 AI 生成 200 字摘要
+    if (earlyBirdItems.length > 0 && summarizer.provider && !summarizer.quotaExhausted) {
+      console.log(`[Main] 为 ${earlyBirdItems.length} 条晨报条目生成 AI 深度摘要...`);
+      for (let i = 0; i < earlyBirdItems.length; i++) {
+        try {
+          const result = await summarizer._callAI(earlyBirdItems[i].title, earlyBirdItems[i].content || earlyBirdItems[i].summary || '');
+          earlyBirdItems[i].summary = result.summary || earlyBirdItems[i].summary;
+          earlyBirdItems[i].tags = result.tags.length > 0 ? result.tags : earlyBirdItems[i].tags;
+        } catch { /* 降级使用原有摘要 */ }
+      }
+    }
+
     const earlyBirdMarkdown = generateEarlyBirdBrief(earlyBirdItems);
     console.log(`[Main] 《AI早知道》: ${earlyBirdItems.length} 条前沿动态`);
 
