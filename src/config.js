@@ -122,14 +122,28 @@ export const AUTO_AI_SOURCES = [
   { name: 'McKinsey Automotive', url: 'https://www.mckinsey.com/industries/automotive-and-assembly/our-insights', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: 'Roland Berger Auto', url: 'https://www.rolandberger.com/en/Insights/Global-Topics/Automotive/', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: 'BCG Automotive', url: 'https://www.bcg.com/industries/automotive-industry/insights', type: 'html', category: CATEGORIES.AUTO_AI },
-  // 智驾一手进展
+  // === 国际头部：L4 全无人驾驶 ===
   { name: 'Waymo Blog', url: 'https://waymo.com/blog/', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: 'Tesla AI', url: 'https://www.tesla.com/AI', type: 'html', category: CATEGORIES.AUTO_AI },
-  { name: '百度 Apollo', url: 'https://apollo.auto/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: 'Tesla FSD News', url: 'https://electrek.co/guides/tesla-fsd/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: 'Cruise', url: 'https://www.getcruise.com/news', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: 'Mobileye', url: 'https://www.mobileye.com/blog/', type: 'html', category: CATEGORIES.AUTO_AI },
+  // === 中国 L4 Robotaxi 运营派 ===
+  { name: '百度 Apollo 萝卜快跑', url: 'https://apollo.auto/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '小马智行 Pony.ai', url: 'https://www.pony.ai/zh/news', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '文远知行 WeRide', url: 'https://www.weride.ai/news', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '智加科技 Plus', url: 'https://plusai.com/news/', type: 'html', category: CATEGORIES.AUTO_AI },
+  // === 中国量产智驾：芯片+算法生态 ===
+  { name: '华为乾崑智驾', url: 'https://auto.huawei.com/', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: 'Momenta', url: 'https://www.momenta.ai/', type: 'html', category: CATEGORIES.AUTO_AI },
-  { name: '华为智能汽车', url: 'https://auto.huawei.com/', type: 'html', category: CATEGORIES.AUTO_AI },
-  { name: '小鹏汽车智驾', url: 'https://www.xpeng.com/', type: 'html', category: CATEGORIES.AUTO_AI },
-  // 垂直汽车科技媒体
+  { name: '地平线 Horizon', url: 'https://www.horizon.auto/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '卓驭科技(大疆车载)', url: 'https://www.dji.com/cn/auto', type: 'html', category: CATEGORIES.AUTO_AI },
+  // === 中国造车新势力（智驾动态） ===
+  { name: '小鹏汽车', url: 'https://www.xpeng.com/', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '蔚来汽车', url: 'https://www.nio.cn/news', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '理想汽车', url: 'https://www.lixiang.com/news.html', type: 'html', category: CATEGORIES.AUTO_AI },
+  { name: '比亚迪智驾', url: 'https://www.byd.com/cn/news.html', type: 'html', category: CATEGORIES.AUTO_AI },
+  // === 垂直汽车科技媒体 ===
   { name: '盖世汽车', url: 'https://auto.gasgoo.com/', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: '九章智驾', url: 'https://www.ninethtech.com/', type: 'html', category: CATEGORIES.AUTO_AI },
   { name: '车东西', url: 'https://chedongxi.com/', type: 'html', category: CATEGORIES.AUTO_AI },

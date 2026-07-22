@@ -23,7 +23,9 @@ const SEARCH_QUERIES = {
     'autonomous driving AI 2026',
     '自动驾驶 端到端智驾 最新',
     'Tesla FSD Waymo self-driving update',
-    '华为 ADS 智能驾驶 小鹏'
+    '华为 ADS 智能驾驶 小鹏 蔚来 理想',
+    'Robotaxi 萝卜快跑 小马智行 文远知行',
+    '地平线 Momenta 卓驭 智驾芯片'
   ],
   [CATEGORIES.TESTING]: [
     'AI test automation 2026',
