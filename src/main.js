@@ -8,7 +8,7 @@ import { Deduplicator } from './processor/deduplicator.js';
 import { HotDetector } from './processor/hot-detector.js';
 import { Summarizer } from './processor/summarizer.js';
 import { filterEarlyBirdItems, generateEarlyBirdBrief } from './processor/early-bird.js';
-import { sendEarlyBirdEmail } from './mailer.js';
+import { sendDailyEmail } from './mailer.js';
 import { Renderer } from './renderer/index.js';
 import { getTodayDate } from './utils.js';
 import { CATEGORIES, ALL_SOURCES } from './config.js';
@@ -167,10 +167,8 @@ async function main() {
 
     renderer.render(dailyData);
 
-    // ===== 发送《AI早知道》邮件 =====
-    if (earlyBirdItems.length > 0) {
-      await sendEarlyBirdEmail(earlyBirdMarkdown);
-    }
+    // ===== 发送每日晨报邮件（头条 + AI早知道）=====
+    await sendDailyEmail({ hotItems, earlyBirdItems, earlyBirdMarkdown });
 
     // ===== 完成 =====
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
