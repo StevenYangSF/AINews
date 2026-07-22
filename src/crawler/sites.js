@@ -17,7 +17,6 @@ const rssParser = new RssParser({
 
 /**
  * 从 URL 提取主页地址
- * 例：https://www.mckinsey.com/industries/automotive/insights → https://www.mckinsey.com/
  */
 function getHomepageUrl(url) {
   try {
@@ -26,6 +25,55 @@ function getHomepageUrl(url) {
   } catch {
     return null;
   }
+}
+
+/**
+ * 使用 Jina Reader API 抓取页面（免费、AI 友好）
+ * 自动去除页眉页脚广告，返回干净文本
+ * API: https://r.jina.ai/URL
+ */
+async function crawlWithJinaReader(source) {
+  const jinaUrl = `https://r.jina.ai/${source.url}`;
+  const text = await safeFetchText(jinaUrl);
+  if (!text || text.length < 50) return [];
+
+  // Jina 返回 Markdown 格式，提取标题行作为文章列表
+  const items = [];
+  const lines = text.split('\n');
+
+  for (const line of lines) {
+    // 匹配 Markdown 链接: [title](url)
+    const match = line.match(/\[([^\]]{5,})\]\((https?:\/\/[^\)]+)\)/);
+    if (match) {
+      const [, title, url] = match;
+      if (items.some(i => i.url === url || i.title === title)) continue;
+      items.push({
+        title: title.slice(0, 150),
+        url,
+        source: source.name,
+        category: source.category,
+        publishedAt: new Date().toISOString(),
+        content: ''
+      });
+    }
+
+    // 匹配 Markdown 标题行后面跟着的文本
+    const headerMatch = line.match(/^#{1,3}\s+(.{10,})/);
+    if (headerMatch && !items.some(i => i.title === headerMatch[1])) {
+      items.push({
+        title: headerMatch[1].slice(0, 150),
+        url: source.url,
+        source: source.name,
+        category: source.category,
+        publishedAt: new Date().toISOString(),
+        content: ''
+      });
+    }
+
+    if (items.length >= 10) break;
+  }
+
+  return items;
 }
 
 // ===== 通用抓取器 =====
@@ -312,29 +360,41 @@ async function crawlSource(source) {
         break;
     }
 
-    // 如果原始 URL 抓取结果为空，尝试回退到主页
+    // 如果原始 URL 抓取结果为空，尝试 Jina Reader → 再回退到主页
     if (items.length === 0 && source.type === 'html') {
-      const homepage = getHomepageUrl(source.url);
-      if (homepage && homepage !== source.url) {
-        console.log(`[Sites] ${source.name}: 原链接无结果，回退到主页 ${homepage}`);
-        items = await crawlHTML({ ...source, url: homepage });
+      // 第一优先回退：Jina Reader API（AI 友好，自动去噪）
+      console.log(`[Sites] ${source.name}: HTML 无结果，尝试 Jina Reader...`);
+      items = await crawlWithJinaReader(source);
+
+      // 第二优先回退：主页
+      if (items.length === 0) {
+        const homepage = getHomepageUrl(source.url);
+        if (homepage && homepage !== source.url) {
+          console.log(`[Sites] ${source.name}: Jina 也无结果，回退主页 ${homepage}`);
+          items = await crawlHTML({ ...source, url: homepage });
+        }
       }
     }
 
     return items;
   } catch (error) {
-    // 抓取失败时也尝试回退到主页
+    // 抓取失败时：Jina Reader → 主页回退
     console.warn(`[Sites] ${source.name} 抓取失败: ${error.message}`);
 
     if (source.type === 'html') {
+      // 尝试 Jina Reader
+      try {
+        const jinaItems = await crawlWithJinaReader(source);
+        if (jinaItems.length > 0) return jinaItems;
+      } catch { /* ignore */ }
+
+      // 回退主页
       const homepage = getHomepageUrl(source.url);
       if (homepage && homepage !== source.url) {
         console.log(`[Sites] ${source.name}: 尝试回退主页 ${homepage}`);
         try {
           return await crawlHTML({ ...source, url: homepage });
-        } catch {
-          return [];
-        }
+        } catch { /* ignore */ }
       }
     }
     return [];

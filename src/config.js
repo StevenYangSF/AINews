@@ -48,37 +48,37 @@ export const GITHUB_TRENDING = {
   category: CATEGORIES.GITHUB
 };
 
-// 官方实验室（7 源）
+// 官方实验室（7 源）— 尽量用 RSS/RSSHub
 export const LABS_SOURCES = [
-  { name: 'OpenAI', url: 'https://openai.com/news/', type: 'html', category: CATEGORIES.LABS },
-  { name: 'Anthropic Research', url: 'https://www.anthropic.com/research', type: 'html', category: CATEGORIES.LABS },
-  { name: 'Anthropic News', url: 'https://www.anthropic.com/news', type: 'html', category: CATEGORIES.LABS },
-  { name: 'Google DeepMind', url: 'https://deepmind.google/discover/blog/', type: 'html', category: CATEGORIES.LABS },
-  { name: 'Meta AI', url: 'https://ai.meta.com/blog/', type: 'html', category: CATEGORIES.LABS },
-  { name: 'Microsoft Research AI', url: 'https://www.microsoft.com/en-us/research/research-area/artificial-intelligence/', type: 'html', category: CATEGORIES.LABS },
-  { name: 'NVIDIA Tech Blog', url: 'https://developer.nvidia.com/blog/', type: 'html', category: CATEGORIES.LABS }
+  { name: 'OpenAI', url: 'https://openai.com/blog/rss.xml', type: 'rss', category: CATEGORIES.LABS },
+  { name: 'Anthropic Research', url: 'https://www.anthropic.com/research/rss.xml', type: 'rss', category: CATEGORIES.LABS },
+  { name: 'Anthropic News', url: 'https://www.anthropic.com/news/rss.xml', type: 'rss', category: CATEGORIES.LABS },
+  { name: 'Google DeepMind', url: 'https://deepmind.google/blog/rss.xml', type: 'rss', category: CATEGORIES.LABS },
+  { name: 'Meta AI', url: 'https://ai.meta.com/blog/rss/', type: 'rss', category: CATEGORIES.LABS },
+  { name: 'Microsoft Research AI', url: 'https://www.microsoft.com/en-us/research/feed/', type: 'rss', category: CATEGORIES.LABS },
+  { name: 'NVIDIA Tech Blog', url: 'https://developer.nvidia.com/blog/feed/', type: 'rss', category: CATEGORIES.LABS }
 ];
 
-// 论文与代码（6 源）
+// 论文与代码（6 源）— 全部 RSS/API
 export const PAPERS_SOURCES = [
-  { name: 'Hugging Face Papers', url: 'https://huggingface.co/papers', type: 'html', category: CATEGORIES.PAPERS },
+  { name: 'Hugging Face Papers', url: 'https://huggingface.co/papers/rss', type: 'rss', category: CATEGORIES.PAPERS },
   { name: 'arXiv cs.AI', url: 'https://rss.arxiv.org/rss/cs.AI', type: 'rss', category: CATEGORIES.PAPERS },
   { name: 'arXiv cs.LG', url: 'https://rss.arxiv.org/rss/cs.LG', type: 'rss', category: CATEGORIES.PAPERS },
   { name: 'Papers with Code', url: 'https://paperswithcode.com/', type: 'html', category: CATEGORIES.PAPERS },
-  { name: 'Stanford HAI', url: 'https://hai.stanford.edu/', type: 'html', category: CATEGORIES.PAPERS },
-  { name: 'Berkeley BAIR', url: 'https://bair.berkeley.edu/blog/', type: 'html', category: CATEGORIES.PAPERS }
+  { name: 'Stanford HAI', url: 'https://hai.stanford.edu/news/rss.xml', type: 'rss', category: CATEGORIES.PAPERS },
+  { name: 'Berkeley BAIR', url: 'https://bair.berkeley.edu/blog/feed.xml', type: 'rss', category: CATEGORIES.PAPERS }
 ];
 
-// 行业媒体（9 源）
+// 行业媒体（9 源）— RSS 优先
 export const MEDIA_SOURCES = [
   { name: 'TechCrunch AI', url: 'https://techcrunch.com/category/artificial-intelligence/feed/', type: 'rss', category: CATEGORIES.MEDIA },
-  { name: 'MIT Technology Review', url: 'https://www.technologyreview.com/topic/artificial-intelligence/', type: 'html', category: CATEGORIES.MEDIA },
-  { name: 'The Verge AI', url: 'https://www.theverge.com/ai-artificial-intelligence', type: 'html', category: CATEGORIES.MEDIA },
-  { name: 'Ars Technica AI', url: 'https://arstechnica.com/tag/artificial-intelligence/', type: 'html', category: CATEGORIES.MEDIA },
-  { name: 'VentureBeat AI', url: 'https://venturebeat.com/category/ai/', type: 'html', category: CATEGORIES.MEDIA },
-  { name: 'The Batch', url: 'https://www.deeplearning.ai/the-batch/', type: 'html', category: CATEGORIES.MEDIA },
-  { name: 'Latent Space', url: 'https://www.latent.space/', type: 'html', category: CATEGORIES.MEDIA },
-  { name: 'SemiAnalysis', url: 'https://www.semianalysis.com/', type: 'html', category: CATEGORIES.MEDIA },
+  { name: 'MIT Technology Review', url: 'https://www.technologyreview.com/feed/', type: 'rss', category: CATEGORIES.MEDIA },
+  { name: 'The Verge AI', url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml', type: 'rss', category: CATEGORIES.MEDIA },
+  { name: 'Ars Technica AI', url: 'https://feeds.arstechnica.com/arstechnica/technology-lab', type: 'rss', category: CATEGORIES.MEDIA },
+  { name: 'VentureBeat AI', url: 'https://venturebeat.com/category/ai/feed/', type: 'rss', category: CATEGORIES.MEDIA },
+  { name: 'The Batch', url: 'https://www.deeplearning.ai/the-batch/feed/', type: 'rss', category: CATEGORIES.MEDIA },
+  { name: 'Latent Space', url: 'https://www.latent.space/feed', type: 'rss', category: CATEGORIES.MEDIA },
+  { name: 'SemiAnalysis', url: 'https://www.semianalysis.com/feed', type: 'rss', category: CATEGORIES.MEDIA },
   { name: 'The Information', url: 'https://www.theinformation.com/', type: 'html', category: CATEGORIES.MEDIA }
 ];
 
