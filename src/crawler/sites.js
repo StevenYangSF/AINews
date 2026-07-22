@@ -5,7 +5,7 @@
 
 import * as cheerio from 'cheerio';
 import RssParser from 'rss-parser';
-import { safeFetchText, safeFetchJSON, isWithin24Hours } from '../utils.js';
+import { safeFetchText, safeFetchJSON, isWithin24Hours, fetchWithTimeout } from '../utils.js';
 import { LABS_SOURCES, PAPERS_SOURCES, MEDIA_SOURCES, HEX2077_SOURCES, EMBODIED_SOURCES, AUTO_AI_SOURCES, TESTING_SOURCES, CHINA_SOURCES, CATEGORIES } from '../config.js';
 
 const rssParser = new RssParser({
@@ -28,52 +28,66 @@ function getHomepageUrl(url) {
 }
 
 /**
- * 使用 Jina Reader API 抓取页面（免费、AI 友好）
- * 自动去除页眉页脚广告，返回干净文本
- * API: https://r.jina.ai/URL
+ * 使用 Jina Reader API 抓取页面（AI 友好，自动去噪）
+ * 需要 JINA_API_KEY 环境变量以避免 403 频率限制
  */
 async function crawlWithJinaReader(source) {
+  const jinaApiKey = process.env.JINA_API_KEY || '';
   const jinaUrl = `https://r.jina.ai/${source.url}`;
-  const text = await safeFetchText(jinaUrl);
-  if (!text || text.length < 50) return [];
 
-  // Jina 返回 Markdown 格式，提取标题行作为文章列表
-  const items = [];
-  const lines = text.split('\n');
+  try {
+    const response = await fetchWithTimeout(jinaUrl, {
+      headers: {
+        ...(jinaApiKey ? { 'Authorization': `Bearer ${jinaApiKey}` } : {}),
+        'X-Return-Format': 'markdown',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    }, 12000);
 
-  for (const line of lines) {
-    // 匹配 Markdown 链接: [title](url)
-    const match = line.match(/\[([^\]]{5,})\]\((https?:\/\/[^\)]+)\)/);
-    if (match) {
-      const [, title, url] = match;
-      if (items.some(i => i.url === url || i.title === title)) continue;
-      items.push({
-        title: title.slice(0, 150),
-        url,
-        source: source.name,
-        category: source.category,
-        publishedAt: new Date().toISOString(),
-        content: ''
-      });
+    if (!response.ok) return [];
+    const text = await response.text();
+    if (!text || text.length < 50) return [];
+
+    // Jina 返回 Markdown 格式，提取文章链接和标题
+    const items = [];
+    const lines = text.split('\n');
+
+    for (const line of lines) {
+      // 匹配 Markdown 链接: [title](url)
+      const match = line.match(/\[([^\]]{5,})\]\((https?:\/\/[^\)]+)\)/);
+      if (match) {
+        const [, title, url] = match;
+        if (items.some(i => i.url === url || i.title === title)) continue;
+        items.push({
+          title: title.slice(0, 150),
+          url,
+          source: source.name,
+          category: source.category,
+          publishedAt: new Date().toISOString(),
+          content: ''
+        });
+      }
+
+      // 匹配 Markdown 标题
+      const headerMatch = line.match(/^#{1,3}\s+(.{10,})/);
+      if (headerMatch && !items.some(i => i.title === headerMatch[1])) {
+        items.push({
+          title: headerMatch[1].slice(0, 150),
+          url: source.url,
+          source: source.name,
+          category: source.category,
+          publishedAt: new Date().toISOString(),
+          content: ''
+        });
+      }
+
+      if (items.length >= 10) break;
     }
 
-    // 匹配 Markdown 标题行后面跟着的文本
-    const headerMatch = line.match(/^#{1,3}\s+(.{10,})/);
-    if (headerMatch && !items.some(i => i.title === headerMatch[1])) {
-      items.push({
-        title: headerMatch[1].slice(0, 150),
-        url: source.url,
-        source: source.name,
-        category: source.category,
-        publishedAt: new Date().toISOString(),
-        content: ''
-      });
-    }
-
-    if (items.length >= 10) break;
+    return items;
+  } catch {
+    return [];
   }
-
-  return items;
 }
 
 // ===== 通用抓取器 =====
@@ -360,17 +374,18 @@ async function crawlSource(source) {
         break;
     }
 
-    // 如果原始 URL 抓取结果为空，尝试 Jina Reader → 再回退到主页
+    // 如果原始 URL 抓取结果为空，智能回退（避免死链级联）
     if (items.length === 0 && source.type === 'html') {
-      // 第一优先回退：Jina Reader API（AI 友好，自动去噪）
-      console.log(`[Sites] ${source.name}: HTML 无结果，尝试 Jina Reader...`);
-      items = await crawlWithJinaReader(source);
+      // 只在有 Jina API Key 时尝试 Jina（避免无 key 时白白 403）
+      if (process.env.JINA_API_KEY) {
+        items = await crawlWithJinaReader(source);
+      }
 
-      // 第二优先回退：主页
+      // Jina 也没结果，回退主页（仅一次，不再递归）
       if (items.length === 0) {
         const homepage = getHomepageUrl(source.url);
         if (homepage && homepage !== source.url) {
-          console.log(`[Sites] ${source.name}: Jina 也无结果，回退主页 ${homepage}`);
+          console.log(`[Sites] ${source.name}: 回退主页`);
           items = await crawlHTML({ ...source, url: homepage });
         }
       }
@@ -378,23 +393,12 @@ async function crawlSource(source) {
 
     return items;
   } catch (error) {
-    // 抓取失败时：Jina Reader → 主页回退
-    console.warn(`[Sites] ${source.name} 抓取失败: ${error.message}`);
-
+    console.warn(`[Sites] ${source.name} 失败: ${error.message.slice(0, 60)}`);
+    // 失败时只做一次主页回退，不再调 Jina（避免级联拖慢）
     if (source.type === 'html') {
-      // 尝试 Jina Reader
-      try {
-        const jinaItems = await crawlWithJinaReader(source);
-        if (jinaItems.length > 0) return jinaItems;
-      } catch { /* ignore */ }
-
-      // 回退主页
       const homepage = getHomepageUrl(source.url);
       if (homepage && homepage !== source.url) {
-        console.log(`[Sites] ${source.name}: 尝试回退主页 ${homepage}`);
-        try {
-          return await crawlHTML({ ...source, url: homepage });
-        } catch { /* ignore */ }
+        try { return await crawlHTML({ ...source, url: homepage }); } catch { /* skip */ }
       }
     }
     return [];

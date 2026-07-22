@@ -1,15 +1,53 @@
 /**
  * 国内科技热搜爬虫
- * 覆盖知乎热榜、微博热搜
+ * 覆盖知乎热榜、微博热搜、百度热搜
+ * 使用完整 Headers 伪装绕过反爬
  */
 
 import * as cheerio from 'cheerio';
-import { safeFetchText, safeFetchJSON } from '../utils.js';
+import { safeFetchText, safeFetchJSON, fetchWithTimeout } from '../utils.js';
 import { CATEGORIES } from '../config.js';
 
 const AI_KEYWORDS = ['AI', '人工智能', '大模型', 'GPT', 'ChatGPT', 'Claude', '机器学习',
   '深度学习', '智能', 'LLM', 'OpenAI', 'Anthropic', '算力', '芯片', 'NVIDIA',
-  '自动驾驶', '具身智能', 'Agent', '智能体', 'Sora', 'Gemini'];
+  '自动驾驶', '具身智能', 'Agent', '智能体', 'Sora', 'Gemini', '机器人', '端到端'];
+
+// 国内站点专用 Headers（模拟浏览器完整请求头）
+const CHINA_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+  'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+  'Accept-Encoding': 'gzip, deflate',
+  'Connection': 'keep-alive',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'none'
+};
+
+/**
+ * 国内站点专用 fetch（带完整 Headers）
+ */
+async function chinaFetch(url) {
+  try {
+    const response = await fetchWithTimeout(url, { headers: CHINA_HEADERS }, 12000);
+    if (!response.ok) return null;
+    return await response.text();
+  } catch {
+    return null;
+  }
+}
+
+async function chinaFetchJSON(url) {
+  try {
+    const response = await fetchWithTimeout(url, {
+      headers: { ...CHINA_HEADERS, 'Accept': 'application/json' }
+    }, 12000);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
 
 /**
  * 抓取知乎热榜中的 AI 相关话题
@@ -17,10 +55,10 @@ const AI_KEYWORDS = ['AI', '人工智能', '大模型', 'GPT', 'ChatGPT', 'Claud
 async function crawlZhihu() {
   console.log('[China] 抓取知乎热榜...');
 
-  const html = await safeFetchText('https://www.zhihu.com/hot');
+  const html = await chinaFetch('https://www.zhihu.com/hot');
   if (!html) {
     // 备用：通过 API
-    const apiData = await safeFetchJSON('https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=50');
+    const apiData = await chinaFetchJSON('https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=50');
     if (!apiData || !apiData.data) return [];
 
     return apiData.data
@@ -82,10 +120,10 @@ async function crawlZhihu() {
 async function crawlWeibo() {
   console.log('[China] 抓取微博热搜...');
 
-  const data = await safeFetchJSON('https://weibo.com/ajax/side/hotSearch');
+  const data = await chinaFetchJSON('https://weibo.com/ajax/side/hotSearch');
   if (!data || !data.data || !data.data.realtime) {
     // 备用方案：抓取页面
-    const html = await safeFetchText('https://s.weibo.com/top/summary');
+    const html = await chinaFetch('https://s.weibo.com/top/summary');
     if (!html) return [];
 
     const $ = cheerio.load(html);
@@ -142,7 +180,7 @@ async function crawlBaidu() {
   console.log('[China] 抓取百度热搜...');
 
   // 百度热搜 API
-  const data = await safeFetchJSON('https://top.baidu.com/api/board?platform=wise&tab=realtime');
+  const data = await chinaFetchJSON('https://top.baidu.com/api/board?platform=wise&tab=realtime');
   if (data && data.data && data.data.cards && data.data.cards[0]) {
     const items = data.data.cards[0].content
       .filter(item => {
@@ -165,7 +203,7 @@ async function crawlBaidu() {
   }
 
   // 备用：抓取百度热搜页面
-  const html = await safeFetchText('https://top.baidu.com/board?tab=realtime');
+  const html = await chinaFetch('https://top.baidu.com/board?tab=realtime');
   if (!html) return [];
 
   const $ = cheerio.load(html);
