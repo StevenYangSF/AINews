@@ -79,7 +79,23 @@ async function main() {
     const papersItems = summarizedItems.filter(i => i.category === CATEGORIES.PAPERS);
     const mediaItems = summarizedItems.filter(i => i.category === CATEGORIES.MEDIA);
     const embodiedItems = summarizedItems.filter(i => i.category === CATEGORIES.EMBODIED);
-    const autoAiItems = summarizedItems.filter(i => i.category === CATEGORIES.AUTO_AI);
+    const autoAiAllItems = summarizedItems.filter(i => i.category === CATEGORIES.AUTO_AI);
+
+    // 汽车AI：国内外各一半均衡展示
+    const chinaAutoKeywords = ['华为', '百度', '小鹏', '蔚来', '理想', '比亚迪', '小马智行', '文远知行', 'Momenta', '地平线', '卓驭', '盖世', '九章', '车东西', '高工', '新出行', '萝卜快跑', '智加', 'Apollo', 'gasgoo', 'cn.gasgoo', 'csdn', 'zhihu', 'deepshare', 'autobit', 'gg-ai'];
+    const chinaAutoItems = autoAiAllItems.filter(i => {
+      const text = `${i.title} ${i.source} ${(i.urls || []).join(' ')} ${i.url || ''}`.toLowerCase();
+      return chinaAutoKeywords.some(kw => text.includes(kw.toLowerCase()));
+    });
+    const globalAutoItems = autoAiAllItems.filter(i => !chinaAutoItems.includes(i));
+
+    // 各取一半，最多 30 条
+    const halfLimit = 15;
+    const autoAiItems = [
+      ...chinaAutoItems.slice(0, halfLimit),
+      ...globalAutoItems.slice(0, halfLimit)
+    ];
+
     const testingItems = summarizedItems.filter(i => i.category === CATEGORIES.TESTING);
     const weeklyItems = summarizedItems.filter(i => i.category === CATEGORIES.WEEKLY);
     const communityItems = summarizedItems.filter(i => i.category === CATEGORIES.COMMUNITY);
@@ -101,7 +117,7 @@ async function main() {
       papers: papersItems.slice(0, 15),
       media: mediaItems.slice(0, 30),
       embodied: embodiedItems.slice(0, 15),
-      autoAi: autoAiItems.slice(0, 15),
+      autoAi: autoAiItems,
       testing: testingItems.slice(0, 15),
       weekly: weeklyItems.slice(0, 10),
       community: communityItems.slice(0, 20),
